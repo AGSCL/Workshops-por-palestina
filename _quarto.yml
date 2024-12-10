@@ -1,0 +1,21 @@
+project:
+  type: website
+  output-dir: "."
+
+website:
+  title: "Workshops por palestina"
+  navbar:
+    left:
+      - href: index.qmd
+        text: Principal
+      - href: historial.qmd
+        text: Historial
+
+format:
+  html:
+    theme: litera
+    css: styles.css
+    toc: true
+
+
+
