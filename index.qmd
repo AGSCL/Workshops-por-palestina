@@ -27,6 +27,6 @@ _'¿De cuál de las siguientes maneras, si es que hay alguna, te has solidarizad
 <div style="display: flex; align-items: center; gap: 15px; margin-top: 20px;">
   <img src="https://raw.githubusercontent.com/AGSCL/CV/main/CURSO-COMPUTACION-ALONSO.jpg" alt="Foto de instructor" style="width: 150px; height: auto; filter: grayscale(100%); border-radius: 5px;">
   <p style="color: #4a4a4a; font-size: 16px; line-height: 1.6;">
-    Este curso está diseñado para introducir a los participantes en el uso de métodos avanzados de análisis de clases latentes, aplicando datos del Barómetro Árabe para explorar patrones de solidaridad hacia Gaza.
+    Este curso está diseñado para introducir a los participantes en el uso de métodos avanzados de análisis de clases latentes, aplicando datos del Barómetro Árabe para explorar patrones de solidaridad hacia Gaza. ([presentación](taller_lca.html)).
   </p>
 </div>
