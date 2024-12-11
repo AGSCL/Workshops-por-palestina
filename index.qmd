@@ -19,8 +19,9 @@ Si quieres donar simplemente, puedes ver este video sobre cómo hacerlo:
 
 <iframe width="560" height="315" src="https://www.youtube.com/embed/66P3FNX6bHY" frameborder="0" allowfullscreen></iframe>
 
+# Workshops disponibles
 
-# XX al XX de Enero, 2025  
+## XX al XX de Enero, 2025  
 **Introducción al análisis de clases latentes a través del Barómetro Árabe (ola 8):**  
 _'¿De cuál de las siguientes maneras, si es que hay alguna, te has solidarizado con Gaza?'_
 
