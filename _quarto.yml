@@ -14,8 +14,11 @@ website:
 format:
   html:
     theme: litera
-    css: styles.css
+    css: mylibs/styles.css
     toc: true
-
-
+    toc-location: left
+    number-sections: true
+    smooth-scroll: true
+execute:
+  freeze: false
 

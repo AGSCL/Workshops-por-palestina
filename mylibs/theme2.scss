@@ -1,0 +1,185 @@
+/*-- scss:defaults --*/
+// Variables de estilo
+$primary-color: #007a3d; // Verde bandera Palestina
+$secondary-color: #ce1126; // Rojo bandera Palestina
+$font-family: 'Arial', sans-serif; // Fuente principal
+
+// Estilos base
+$body-bg: #ffffff !default; // Fondo blanco
+$body-color: rgba(0, 0, 0, 0.8) !default; // Texto negro translúcido
+$link-color: $primary-color !default; // Color de enlaces
+$selection-bg: rgba(206, 17, 38, 0.2) !default; // Fondo de selección (rojo translúcido)
+
+// Estilos secundarios
+$aside-bg-color: rgba(255, 255, 255, 0.8) !default; // Fondo translúcido para asides
+$fig-cap-color: rgba(0, 0, 0, 0.6) !default; // Color para captions de figuras
+
+/*-- scss:mixins --*/
+// Mixins reutilizables
+@mixin text-shadow($color) {
+  text-shadow: 1px 1px 2px $color;
+}
+
+/*-- scss:functions --*/
+// Funciones personalizadas
+@function lighten-color($color, $amount) {
+  @return lighten($color, $amount);
+}
+
+/*-- scss:rules --*/
+// Estilo general del body
+body {
+  font-family: $font-family;
+  background-color: $body-bg;
+  color: $body-color;
+}
+
+// Enlaces
+a {
+  color: $link-color;
+  text-decoration: none;
+
+  &:hover {
+    color: $secondary-color; // Cambia a rojo al pasar el cursor
+  }
+}
+
+// Selección de texto
+::selection {
+  background-color: $selection-bg;
+}
+
+// Encabezados
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Oswald', monospace; // Fuente para encabezados
+  color: $secondary-color; // Rojo
+  text-transform: uppercase;
+  border-bottom: 2px solid $primary-color; // Línea inferior verde
+  padding-bottom: 5px;
+  margin-bottom: 15px;
+}
+
+// Asides
+aside {
+  background-color: $aside-bg-color;
+  border-left: 5px solid $primary-color; // Línea verde a la izquierda
+  padding: 15px;
+  border-radius: 5px;
+  margin: 20px 0;
+}
+
+// Captions de figuras
+figcaption {
+  color: $fig-cap-color;
+  font-style: italic;
+  text-align: center;
+}
+
+// Tablas
+table {
+  width: 100%;
+  border-collapse: collapse;
+  border: 1px solid $link-color;
+
+  th, td {
+    border: 1px solid $link-color;
+    padding: 10px;
+  }
+
+  th {
+    background-color: $link-color;
+    color: $body-bg; // Texto blanco
+  }
+
+  tr:nth-child(even) {
+    background-color: rgba(0, 0, 0, 0.05); // Gris claro para filas pares
+  }
+}
+
+// Estilo para las presentaciones
+$slide-bg-color: #ffffff !default; // Fondo blanco para diapositivas
+$slide-heading-color: $secondary-color !default; // Rojo para encabezados
+$slide-text-color: $body-color !default; // Negro translúcido para texto
+$slide-link-color: $link-color !default; // Verde para enlaces
+
+/*-- scss:rules --*/
+// Fondo y estilo de las diapositivas
+.reveal {
+  background-color: $slide-bg-color;
+
+  .slides {
+    color: $slide-text-color;
+    font-family: $font-family;
+  }
+}
+
+// Encabezados de diapositivas
+.reveal h1, .reveal h2, .reveal h3 {
+  font-family: 'Oswald', monospace;
+  color: $slide-heading-color;
+  text-transform: uppercase;
+  margin-bottom: 20px;
+}
+
+// Enlaces dentro de diapositivas
+.reveal a {
+  color: $slide-link-color;
+  text-decoration: none;
+
+  &:hover {
+    color: $secondary-color; // Rojo al pasar el cursor
+  }
+}
+
+// Estilo de las citas en las diapositivas
+.reveal blockquote {
+  border-left: 5px solid $primary-color; // Línea verde al lado
+  padding-left: 15px;
+  font-style: italic;
+  color: $fig-cap-color; // Negro translúcido
+}
+
+// Notas al pie
+.reveal .footnote {
+  font-size: 0.8em;
+  color: $fig-cap-color;
+  text-align: right;
+  margin-top: 20px;
+}
+
+// Tablas en las diapositivas
+.reveal table {
+  width: 100%;
+  border-collapse: collapse;
+
+  th {
+    background-color: $link-color;
+    color: $body-bg; // Blanco
+    padding: 10px;
+  }
+
+  td {
+    border: 1px solid $link-color;
+    padding: 10px;
+  }
+
+  tr:nth-child(even) {
+    background-color: rgba(0, 0, 0, 0.05); // Gris claro para filas pares
+  }
+}
+
+// Transiciones
+.reveal {
+  .slides {
+    transition: background-color 0.5s ease, color 0.5s ease;
+  }
+}
+
+// Código en diapositivas
+.reveal code, .reveal pre {
+  background-color: #f5f5f5;
+  color: $body-color;
+  padding: 10px;
+  border-radius: 4px;
+  font-family: 'Courier New', monospace;
+}

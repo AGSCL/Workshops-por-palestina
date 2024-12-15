@@ -1,5 +1,0 @@
----
-title: "Taller_LCA"
-format: revealjs
-editor: visual
----

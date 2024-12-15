@@ -1,0 +1,17 @@
+{
+  "hash": "b5c0072a64f2d12108752d5ae0636627",
+  "result": {
+    "engine": "knitr",
+    "markdown": "---\ntitle: \"Introducción al análisis de clases latentes\"\ndate: last-modified\ndate-format: \"D [d]e MMM, YYYY\"\nauthor: \"Andrés González-Santa Cruz\"\nsubtitle: \"[Contexto de presentación]\" #CUIDADO CON TILDES\ninstitute: \"Estudiante Doctorado en Salud Pública, Investigador joven, nDP\"\neditor: source\nengine: knitr\nexecute:\n  freeze: auto\n---\n",
+    "supporting": [
+      "taller_lca_files"
+    ],
+    "filters": [
+      "rmarkdown/pagebreak.lua"
+    ],
+    "includes": {},
+    "engineDependencies": {},
+    "preserve": {},
+    "postProcess": true
+  }
+}

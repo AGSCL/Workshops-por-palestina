@@ -5,9 +5,11 @@ format: html
 execute:
   echo: false
 header-includes:
-  - '<div style="text-align: center;"><img src="banner.svg" alt="Free Palestine" style="width:100%; max-width: 800px;"></div>'
+  - '<div style="text-align: center;"><img src="_style/banner.svg" alt="Free Palestine" style="width:75%; max-width: 200px;"></div>'
 
 ---
+
+Al 13 de diciembre, se cotnaban entre 14.500 niños asesinados directa o indirectamente producto de la ocupación en Gaza ([Fuente](https://www.unicef.org/press-releases/statement-unicef-executive-director-catherine-russell-children-and-continued)). Está en nuestras manos contribuir a que esto se detenga.
 
 ¡Puedes aprender y apoyar a Palestina al mismo tiempo! Puedes tanto inscribirte en los próximos talleres COMO hacer una donación para obtener las grabaciones y todo el material de talleres anteriores.
 
