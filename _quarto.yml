@@ -15,7 +15,7 @@ format:
   html:
     theme: litera
     css:
-      - mylibs/styles.css
+      - https://raw.githubusercontent.com/AGSCL/Workshops-por-palestina/refs/heads/master/mylibs/styles.css
     toc: true
     toc-location: left
     number-sections: true

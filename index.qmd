@@ -1,17 +1,7 @@
 ---
 title: "Workshops por palestina"
 subtitle: "Defendiendo la Justicia y los Derechos Humanos"
-format:
-  html:
-    theme: litera
-    css:
-      - mylibs/styles.css
-    toc: true
-    toc-location: left
-    number-sections: true
-    smooth-scroll: true
-execute:
-  echo: false
+format: html
 header-includes:
   - '<div style="text-align: center;"><img src="https://raw.githubusercontent.com/AGSCL/Workshops-por-palestina/refs/heads/master/_style/banner.svg" alt="Free Palestine" style="width:75%; max-width: 200px;"></div>'
 
