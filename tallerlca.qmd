@@ -3,7 +3,7 @@ title: "Introducción al análisis de clases latentes"
 date: last-modified
 date-format: "D [d]e MMM, YYYY"
 author: "Andrés González-Santa Cruz"
-subtitle: "[Contexto de presentación]" #CUIDADO CON TILDES
+subtitle: "¿De cuál de las siguientes maneras, si es que hay alguna, has solidarizado con Gaza?"
 institute: "Estudiante Doctorado en Salud Pública, Investigador joven, nDP"
 editor: source
 format: 
@@ -34,5 +34,482 @@ format:
     code-summary: "expandir para código"
 ---
 
+## Indice
 
-## Esto
+```{r}
+#| echo: true
+#| include: true
+#| code-fold: true
+#| code-summary: "expandir para código"
+#| fig-align: "center"
+#| warnings: false
+#| message: false
+#| results: hide
+#| label: "setup"
+
+#eliminar archivos previos y limpiar la memoria del entorno
+rm(list=ls());gc()
+
+#Definir el repositorio sobre el que instalar los paquetes desde Chile
+options(repos=structure(c(CRAN="https://cran.dcc.uchile.cl/"))) 
+
+#ver si puede activarse un paquete; si no, lo instala
+#para cambiar la fuente de las letras
+if(!require(showtext)){install.packages("showtext")}
+#para elaborar gráficos
+if(!require(ggplot2)){install.packages("ggplot2")}
+#para elaborar gráficos interactivos
+if(!require(plotly)){install.packages("plotly")}
+#Para separar gráficos
+if(!require(grid)){install.packages("grid")}
+#Para separar gráficos, ampliado
+if(!require(gridExtra)){install.packages("gridExtra")}
+#para mostrar imágenes
+if(!require(magick)){install.packages("magick")}
+#para hacer tablas e interactuar con informes
+if(!require(knitr)){install.packages("knitr")}
+#para manipular bases de datos
+if(!require(tidyverse)){install.packages("tidyverse")}
+#para importar y exportar bases de datos en distintos formatos
+if(!require(rio)){install.packages("rio")}
+#para explorar variables
+if(!require(psych)){install.packages("psych")}
+#para paralelizar los procesos en la CPU
+if(!require(parallel)){install.packages("parallel")}
+#hace lo mismo
+if(!require(doParallel)){install.packages("doParallel")}
+
+#Para llevar a cabo análissi de clases latentes
+if(!require(glca)){install.packages("glca")}
+
+#para generar gráficos esquemáticos
+if(!require(DiagrammeR)){install.packages("DiagrammeR")}
+#para exportar esos gráficos
+if(!require(DiagrammeRsvg)){install.packages("DiagrammeRsvg")}
+#para transformar gráficos en formato .svg
+if(!require(rsvg)){install.packages("rsvg")}
+#para visualizarlos en una presentación
+if(!require(htmlwidgets)){install.packages("htmlwidgets")}
+#permite limpiar bases de datos, entre otras funciones
+if(!require(janitor)){install.packages("janitor")}
+
+# Elegr ubicación entorno
+wdpath <- getwd()
+
+# Activar showtext
+#showtext_auto()
+
+# Agregar la fuente Oswald desde Google Fonts
+#font_add_google(name = "Oswald", family = "Oswald")
+```
+
+- Problema /Caso de uso
+- Definición, supuestos y lugar en familia de modelos, ventajas/limitaciones
+- Aplicación: selección modelo (ajuste)
+- Aplicación: clasificación (hard classification / modal)
+- Qué reportar, mejores prácticas
+- Extensiones: incorporar covariables (classify-analyse/1-step/3-step)
+- Fuentes
+
+::: {.notes}
+`r invisible("#_#_#_#_#_#_#_#_#_#_#_#_#_#_#_#_#")`
+- Me presento: mi nombre es Andrés González, soy psicólogo de profesion, estudiante del Doctorado de Salud Pública en la Universidad de Chile
+
+- Yo aplico herramientas estadísticas, pero siempre intento trabajar con un bioestadístico, 
+o consultartle. De la misma forma, es necesario que tenga en cuenta mi formación para que tome perspectiva del enfoque aplicado que veremos aquí.
+:::
+
+## Problema
+
+:::: {.columns}
+
+::: {.column width="50%"}
+```{r}
+#| echo: true
+#| include: true
+#| code-fold: true
+#| fig-align: "center"
+#| code-summary: "expandir para código"
+#| warnings: false
+#| message: false
+#| label: "importar_bd"
+#Importar base de datos. En este caso la obtuve de una carpeta personal. 
+#Por tanto, para la ubicación del proyecto, retrodecedemos a la carpeta anterior que la contiene, 
+#luego, voy a la carpeta ArabBarometer_WaveVIII_English_v1, y busco el archivo 
+#ArabBarometer_WaveVIII_English_v1.csv
+
+#Este archivo es un archivo separado por comas
+
+#Si no, puede importarlos desde (ventana interactiva)
+#arabebarometro<- rio::import(choose.files())
+arabebarometro<-
+rio::import(paste0(gsub("palestine$","", wdpath), "ArabBarometer_WaveVIII_English_v1/ArabBarometer_WaveVIII_English_v1.csv"))
+
+#Previsualizar base de datos
+dplyr::glimpse(arabebarometro)
+```
+<div style="text-align: center; font-size: small; font-style: italic;"> Fuente: <a href="https://www.arabbarometer.org/surveys/arab-barometer-wave-viii/#" target="_blank">Data Sets
+Arab Barometer Wave VIII: Base de datos y Reporte técnico</a> </div>
+
+::: {.nonincremental}
+<div style="font-size: 45%; line-height: 0.9;">
+**QKUW40: "¿De cuáles de las siguientes maneras, si es que hay alguna, ha mostrado usted solidaridad con Gaza? Por favor, dígame todas las que apliquen."**
+
+1. Boicot a empresas que apoyan a Israel  
+2. Seguimiento continuo de noticias relacionadas con la guerra  
+3. Participación en actividades públicas de solidaridad  
+4. Difusión de mensajes de solidaridad en redes sociales  
+5. Donaciones monetarias a los residentes de Gaza  
+90. Otro – Por favor, especifique: 
+97. No he tomado ninguna de estas acciones
+98. No sabe
+99. Se niega a responder
+
+Además, utilizaremos el género
+</div>
+:::
+<!-- In which of the following ways, if any, have you stood in solidarity with Gaza? -->
+:::
+
+::: {.column width="50%"}
+
+::: {.nonincremental}
+
+
+```{r}
+#| echo: true
+#| include: true
+#| code-fold: true
+#| fig-align: "center"
+#| code-summary: "expandir para código"
+#| warnings: false
+#| message: false
+#| label: "seleccion_bd"
+#length(unique(arabebarometro$ID)) 
+# ID = # Respondent ID number
+# What is your religion? # 1. Muslim # 2. Christian # 4. No religion [INTERVIEWER: DO NOT READ] # 90. Other- # 99. Refused to answer
+#Q1002Gender # 1. Male # 2. Female
+#Q1001 How old are you?
+# Q13 Urban/Rural= # 1. Urban # 2. Rural # 3. Camp [PROGRAMMER: COUNTRY == 8, 15]
+
+arabebarometro_selected<-
+arabebarometro |> 
+  #descartamos aquellos que no tengan número de identificación de respuesta
+    dplyr::filter(ID!="0") |>
+  #vemos 
+    dplyr::select(dplyr::contains("QKUW40"),
+      #seleccionamos la religión
+      dplyr::contains("Q1012"),
+      #seleccionamos el género (2. Mujer)
+      dplyr::contains("Q1002"),
+      #Urbano/rural
+      "Q13",
+      #País
+      "COUNTRY"
+      ) 
+#eliminamos aquellos que notengan valores en ninguna de las variables de interés
+arabebarometro_selected <- arabebarometro_selected[rowSums(!is.na( arabebarometro_selected[,paste0("QKUW40_", c(1:5, 90, 97, 98, 99))] )) > 0, ]
+```
+
+```{r }
+#| echo: true
+#| include: true
+#| code-fold: true
+#| fig-align: "center"
+#| code-summary: "expandir para código"
+#| warnings: false
+#| message: false
+#| fig.align: 'center'
+#| label: "esquema"
+#| fig.cap: "Esquema conceptual"
+#| out-width: "100%"
+#| fig.height: 2
+#| eval: true
+
+gr_lca_9 <- DiagrammeR::grViz("
+digraph flowchart {
+    fontname='Comic Sans MS'
+    rankdir=TB; // Cambia la orientación a vertical (Top to Bottom)
+    nodesep=0.4; // Reduce la separación horizontal entre nodos
+    ranksep=0.4; // Reduce la separación vertical entre filas
+
+    // Nodo principal de 'Clases latentes'
+    LCA [label = 'Clases\\nlatentes',
+         shape = circle,
+         style = filled,
+         color = lightgrey,
+         fontsize=14]
+
+    // Nodos con 9 opciones abreviadas
+    Q1 [label = 'opc1', fontsize=11, shape = box]
+    Q2 [label = 'opc2', fontsize=11, shape = box]
+    Q3 [label = 'opc3', fontsize=11, shape = box]
+    Q4 [label = 'opc4', fontsize=11, shape = box]
+    Q5 [label = 'opc5', fontsize=11, shape = box]
+    Q6 [label = 'opc90', fontsize=11, shape = box]
+    Q7 [label = 'opc97', fontsize=11, shape = box]
+    Q8 [label = 'opc98', fontsize=11, shape = box]
+    Q9 [label = 'opc99', fontsize=11, shape = box]
+
+    // Conexiones desde 'Clases latentes' a cada opción
+    LCA -> {Q1 Q2 Q3 Q4 Q5 Q6 Q7 Q8 Q9}
+}
+")
+
+gr_lca_9
+```
+
+:::
+
+<div style="font-size: 90%; line-height: 0.9;">
+- Manifestaciones de apoyo heterogéneas
+
+- Pero...
+
+- Grupos --> Patrones
+
+- **¿Podremos identificarles y describirles?**
+
+</div>
+:::
+
+::::
+
+::: {.notes}
+`r invisible("#_#_#_#_#_#_#_#_#_#_#_#_#_#_#_#_#")`
+- Asumimos que hay manifestaciones de apoyo heterogéneas (¿este supuesto se ajusta a los datos?)
+- Pero ciertas combinaciones de acciones que son comunes entre algun@s y distint@s de otr@s
+- Suponemos que "pertenecen" a ciertos grupos (que no vemos directamente) que explican esos "patrones" y no otros
+- ¿Podremos identificarles y describirles?
+- Este enfoque es especialmente útil en ciencias sociales, del comportamiento y la salud, donde se presupone que los datos se generan a partir de una mezcla de distribuciones específicas para cada clase.
+:::
+
+## Antecedentes conceptuales
+
+<!-- Definición, supuestos y lugar en familia de modelos, ventajas/limitaciones -->
+
+:::: {.columns}
+
+::: {.column width="50%"}
+
+- Definición: ¿latentes?
+
+- Supuestos
+
+```{r}
+#| echo: true
+#| include: true
+#| code-fold: true
+#| fig-align: "center"
+#| code-summary: "expandir para código"
+#| warnings: false
+#| message: false
+#| fig.align: 'center'
+#| label: "ejemplo"
+#| fig.cap: "Ejemplo mezcla distribuciones subyacentes"
+#| out-width: "50%"
+#| fig-height: 2.5
+# Generar datos simulados
+set.seed(123)
+x <- seq(0, 10, by = 0.1)  # Solo valores positivos
+
+# Clase Latente 1: Weibull con cola más larga a la derecha
+shape_weibull <- 2  # Forma de la Weibull
+scale_weibull <- 4  # Escala para ajustar la dispersión
+density_class1 <- dweibull(x, shape = shape_weibull, scale = scale_weibull)
+
+# Clase Latente 2: distribución normal
+density_class2 <- dnorm(x, mean = 6, sd = 2)
+
+# Distribución observada: suma de las densidades (normalizada)
+density_observed <- density_class1 + density_class2
+density_observed <- density_observed / max(density_observed) * max(dnorm(x, mean = 5, sd = 2))
+
+# Crear el dataframe
+data <- data.frame(
+    x = c(x, x, x),
+    density = c(density_class1, density_class2, density_observed),
+    group = rep(c("Latent Class 1", "Latent Class 2", "Observed Distribution"), each = length(x))
+)
+
+# Crear el gráfico
+ggplot(data, aes(x= x, y= density, color= group, linetype= group)) +
+  # Rellenar las áreas bajo las curvas de las clases latentes
+  geom_area(data= subset(data, group== "Latent Class 1"), aes(fill= group), alpha= 0.2)+
+  geom_area(data= subset(data, group== "Latent Class 2"), aes(fill= group), alpha= 0.2)+
+  # Líneas para las densidades
+  geom_line(size= 1) +
+  # Defino el color para cada línea
+  scale_color_manual(values= c("blue", "red", "black")) +
+  # Defino el color de relleno para esas distribuciones
+  scale_fill_manual(values= c("blue", "red", NA)) +
+  # Defino el tipo de linea (interlineado) para cada una
+  scale_linetype_manual(values= c("dashed", "dashed", "solid")) +
+  # Doy nombre a los ejes x e y
+  labs(x= "Units", y= "Density", color= "", linetype= "", fill= "") +
+  # Superpongo nombres a las distribuciones con ubicaciones en coordenadas x e y y defino el color
+  annotate("text", x= 2, y= 0.08, label= "Clase\nlatente 1", color= "blue", size= 6) +
+  annotate("text", x= 7, y= 0.08, label= "Clase\nlatente 2", color= "red", size= 6) +
+  annotate("text", x= 5, y= 0.20, label= "Distribución\nobservada", color= "black", size= 6)+
+  # elimino información irrelevante, incluyendo la leyenda 
+theme_void()+
+theme(legend.position = "none")
+```
+<div style="text-align: center; font-size: small; font-style: italic;"> Adaptado de: <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC7746621/" target="_blank">Sinha et al 2021</a> </div>
+<div style="font-size: 50%;">
+|                 | Para Promedios        |                       | de Regresión                    |                           |
+|-----------------|-----------------------|-----------------------|---------------------------------|---------------------------|
+|                 | **Latente Continua**  | **Latente Discreta**  | **Latente Continua**            | **Latente Discreta**      |
+| **Observado**   |                       |                       |                                 |                           |
+| **Continua**    | Factorial             | Rasgos latentes       | Efectos aleatorios              | Mezcla finita             |
+| **Discreta**    | TRI                   | Clases latentes       | Efectos aleatorios logísticos   | Logística, Mezcla finita  |
+</div>
+
+::: 
+
+::: {.column width="50%"}
+```{r}
+#| echo: true
+#| include: true
+#| code-fold: true
+#| fig-align: "center"
+#| code-summary: "expandir para código"
+#| warnings: false
+#| message: false
+#| fig.align: 'center'
+#| label: "ventajas-desventajas"
+##| fig.cap: "Ventajas y desventajas"
+#| out.height: "30%"
+# Cargar las bibliotecas necesarias
+library(ggplot2)
+library(gridExtra)
+
+ratio_plot <- 1.5
+
+# Datos (sin cambios)
+data <- data.frame(
+  Categoria = c(rep("Ventajas", 3), rep("Limitaciones", 3)),
+  Texto = c(
+    "Probabilística",
+    "Datos faltantes",
+    "Criterios estadísticos",
+    "Valores iniciales",
+    "Computacionalmente\nintensivo",
+    "Tamaño muestra"
+  ),
+  Posicion = c(1:3, 1:3)
+)
+
+# Función para crear gráficos con ajustes
+crear_grafico <- function(data, color, titulo, shape) {
+  ggplot(data, aes(x = 0, y = Posicion, label = Texto)) +
+    geom_text(hjust = -0.05, color = color, size = 6 * ratio_plot) +
+    geom_point(color = color, size = 5 * ratio_plot, shape = shape, fill = color) +
+    xlim(0, 1) +
+    theme_void() +
+    ggtitle(titulo) +
+    theme(
+      plot.title = element_text(color = color, size = 16 * ratio_plot, face = "bold", hjust = 0.5), # Centrar título
+      plot.margin = margin(2, 2, 2, 2, "mm") # Márgenes más pequeños en mm
+    ) +
+    scale_y_continuous(limits = c(0.5, 3.5), expand = c(0, 0)) # Ajustar límites del eje y
+}
+
+# Crear los gráficos usando la función
+ventajas_plot <- crear_grafico(data[data$Categoria == "Ventajas", ], "darkgreen", "Ventajas", 24)
+limitaciones_plot <- crear_grafico(data[data$Categoria == "Limitaciones", ], "darkred", "Limitaciones", 25)
+
+
+# Combinar los gráficos con ajustes para reducir espacio
+grid.arrange(
+  ventajas_plot, limitaciones_plot,
+  ncol = 2,
+  widths = c(1, 1),
+  padding = unit(0, "mm") # Eliminar padding entre gráficos
+)
+```
+
+
+### Utilidad
+
+1. **Análisis sustantivo**:
+
+2. **Análisis longitudinal**:
+
+3. **Metodología de encuestas**:
+
+:::
+
+::::
+
+::: {.notes}
+`r invisible("#_#_#_#_#_#_#_#_#_#_#_#_#_#_#_#_#")`
+**Definición**= Statistical model in which parameters of interest differ across unobserved subgroups (“latent classes”; “mixtures”). Buscamos estimar los parámetros que describen estas clases (valores no observados que inferimos explican las respuestas en variables observadas, medidas y manifiestas, y se asuem que toman valores discretos; no se asume que poseen propiedades continuas como los rasgos latentes)
+Buscamos estimar los parámetros del modelo que describen estas clases latentes, como:
+- Las probabilidades de pertenecer a cada clase.
+- Las distribuciones de las variables observadas dentro de cada clase.
+
+- Pueden usarse como una técnica dirigida por los datos, como de tener fundamentos teóricos para utilizarlos.
+
+**Supuestos**:
+- Mezcla de distribuciones: Las respuestas observadas se explican como una combinación ponderada de distribuciones específicas de cada clase latente.
+- Independencia condicional: Dentro de cada clase latente, las variables observadas son independientes.
+
+**Tabla**
+- Medias= Identificar patrones de respuesta o perfiles promedio.	
+- Regresión= Explicar/predecir una variable respuesta en base a predictores o VIs.
+
+**Utilidad**
+- 1) - Creación de tipologías de encuestados (ej.: tolerancia, valores, clase social). - Modelos multinivel no paramétricos.
+- 2) - Estudio de datos de crecimiento o trayectorias a lo largo del tiempo.
+- 3) - Análisis de patrones de datos faltantes o respuestas aberrantes. - Evaluación del desempeño de los cuestionarios.
+:::
+
+## Cómo lo hace
+
+
+::: {.notes}
+`r invisible("#_#_#_#_#_#_#_#_#_#_#_#_#_#_#_#_#")`
+- explicar el EM, ver lo de las limitaciones
+- ponerlo desde el punto de vista de un psicólogo
+
+:::
+
+## Aplicación
+
+## Información de la sesión
+
+<div style="font-size: 50%;">
+```{r session_info, echo=T, paged.print=TRUE}
+#guardamos la información generada
+save.image("_data/palestine.RData")
+#vemos desde donde se producen las librerías
+Sys.getenv("R_LIBS_USER")
+#ponemos información de la sesión: Sistema operativo, paquetes, idisioncracias, etc.
+sessionInfo()
+```
+</div>
+
+
+## Fuentes {.nonincremental}
+
+<div style="font-size: 40%;">
+
+- Arango Díaz, L. (2015). Práctica poLCA. RPubs. https://rpubs.com/liliana/94701
+- Haughton, D., Legrand, P., & Woolford, S. (2009). Review of Three Latent Class Cluster Analysis Packages: Latent Gold, poLCA and MCLUST. The American Statistician, 63(1), 81-91. https://doi.org/10.1198/tast.2009.0016
+- He, J., & Fan, X. (2019). Latent Class Analysis. In V. Zeigler-Hill & T. Shackelford (Eds.), Encyclopedia of Personality and Individual Differences (pp. 1-7). Springer, Cham. https://doi.org/10.1007/978-3-319-28099-8_2313-1
+- Herle, M., Micali, N., Abdulkadir, M., Loos, R., Bryant-Waugh, R., Hübel, C., Bulik, C. M., & De Stavola, B. L. (2020). Identifying typical trajectories in longitudinal data: Modelling strategies and interpretations. European Journal of Epidemiology, 35(3), 205-222. https://doi.org/10.1007/s10654-020-00615-6
+- Kimchi, A. (2019). Investigating the Assignment of Probation Conditions: Heterogeneity and the Role of Race and Ethnicity. Journal of Quantitative Criminology, 35, 715-745. https://doi.org/10.1007/s10940-018-9400-2
+- Kongsted, A., & Nielsen, A. M. (2017). Latent Class Analysis in health research. Journal of Physiotherapy, 63(1), 55-58.
+- Mantegazzini, A. (2019). An Introduction to Latent Class Modelling: LCM with Stata, how does it work? [Presentation]. Research Infrastructure for Science and Innovation Policy Studies (RISIS). https://www.risis2.eu/wp-content/uploads/2019/09/LCM-with-STATA_-Barbara_Antonioli_Mantegazzini_rev.pdf
+- Nylund-Gibson, K., Garber, A. C., Carter, D. B., Chan, M., Arch, D. A. N., Simon, O., Whaling, K., Tartt, E., & Lawrie, S. I. (2023). Ten frequently asked questions about latent transition analysis. Psychological Methods, 28(2), 284-300. https://doi.org/10.1037/met0000486
+- Oberski, D. (2015). Latent class analysis [PowerPoint slides]. Tilburg University. http://daob.nl/wp-content/uploads/2015/07/ESRA-course-slides.pdf
+- Oberski, D. L. (2016). Mixture models: Latent profile and latent class analysis. In J. Robertson & M. Kaptein (Eds.), Modern Statistical Methods for HCI (pp. 275-287). Springer. https://doi.org/10.1007/978-3-319-26633-6_12
+- Reyna, C., & Brussino, S. (2011). Revisión de los fundamentos del análisis de clases latentes y ejemplo de aplicación en el área de las adicciones. Trastornos Adictivos, 13(1), 11-19. https://doi.org/10.1016/s1575-0973(11)70004-6
+- Schreiber, J. (2016). Latent Class Analysis: An example for reporting results. Research in Social and Administrative Pharmacy. https://doi.org/10.1016/j.sapharm.2016.11.011
+- Sinha, P., Calfee, C. S., & Delucchi, K. L. (2021). Practitioner's Guide to Latent Class Analysis: Methodological Considerations and Common Pitfalls. Critical Care Medicine, 49(1), e63-e79. https://doi.org/10.1097/CCM.0000000000004710
+- Smith, A. (s.f.). Latent class trajectory analysis. School of Physiotherapy and Exercise Science, Curtin University. https://opus-tjr.org.au/wp-content/uploads/2019/05/OPUS-Webinar_Trajectory-Analysis_Introduction.pdf
+- Suffoletto, B., & Chung, T. (2016). Patterns of Change in Weekend Drinking Cognitions Among Non-Treatment-Seeking Young Adults During Exposure to a 12-Week Text Message Intervention. Journal of Studies on Alcohol and Drugs, 77(6), 914-923. https://doi.org/10.15288/jsad.2016.77.914
+- Weller, B. E., Bowen, N. K., & Faubert, S. J. (2020). Latent Class Analysis: A Guide to Best Practice. Journal of Black Psychology, 46(4), 287-311.
+- Zhang, Z., Abarda, A., Contractor, A., Wang, J., & Dayton, C. (2018). Exploring heterogeneity in clinical trials with latent class analysis. Annals of Translational Medicine, 6(7). https://doi.org/10.21037/18822
+</div>

@@ -182,4 +182,39 @@ $slide-link-color: $link-color !default; // Verde para enlaces
   padding: 10px;
   border-radius: 4px;
   font-family: 'Courier New', monospace;
+  font-size: 0.65em; /* Ajusta el tamaño del código (65% del tamaño base) */
+  line-height: 1.1; /* Ajusta el interlineado */
+}
+
+
+// Estilo para el contenedor del "details"
+details.code-fold {
+  font-size: 26px; // Tamaño del texto del resumen
+  line-height: 1.1; // Espaciado entre líneas
+  summary {
+    font-weight: bold; // Hacer el texto del resumen en negrita
+    font-size: 26px; // Tamaño del texto del resumen
+    cursor: pointer; // Añadir el puntero para interacción
+  }
+}
+
+// Estilo para el código dentro del contenedor= este es el código reeal!!
+div.sourceCode {
+  font-size: 20px; // Tamaño de la fuente del código
+  line-height: 1.1; // Espaciado entre líneas para el código
+  background-color: #f9f9f9; // Fondo para diferenciar
+  border: 1px solid #ccc; // Borde del contenedor de código
+  padding: 10px; // Espaciado interno
+  border-radius: 5px; // Esquinas redondeadas
+
+  pre {
+    margin: 0; // Quitar márgenes para compactar el código
+  }
+
+  code {
+    font-family: "Courier New", Courier, monospace; // Fuente monoespaciada
+    display: block; // Asegurar que ocupe toda la línea
+    white-space: pre-wrap; // Permitir que el texto se ajuste en lugar de desbordar
+    word-wrap: break-word; // Ajuste de palabras largas
+  }
 }
