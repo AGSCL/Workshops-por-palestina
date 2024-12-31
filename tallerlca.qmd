@@ -165,7 +165,7 @@ Arab Barometer Wave VIII: Base de datos y Reporte técnico</a> </div>
 98. No sabe
 99. Se niega a responder
 
-Además, utilizaremos el género
+Además, utilizaremos otras variables
 </div>
 :::
 <!-- In which of the following ways, if any, have you stood in solidarity with Gaza? -->
@@ -185,27 +185,24 @@ Además, utilizaremos el género
 #| warnings: false
 #| message: false
 #| label: "seleccion_bd"
-#length(unique(arabebarometro$ID)) 
-# ID = # Respondent ID number
-# What is your religion? # 1. Muslim # 2. Christian # 4. No religion [INTERVIEWER: DO NOT READ] # 90. Other- # 99. Refused to answer
-#Q1002Gender # 1. Male # 2. Female
-#Q1001 How old are you?
-# Q13 Urban/Rural= # 1. Urban # 2. Rural # 3. Camp [PROGRAMMER: COUNTRY == 8, 15]
+
+#para explorar variables de interés
+#arabebarometro %>% dplyr::filter(rowSums(!is.na(select(., paste0("QKUW40_", c(1:5, 90, 97, 98, 99))))) > 0) |> 
 
 arabebarometro_selected<-
 arabebarometro |> 
   #descartamos aquellos que no tengan número de identificación de respuesta
     dplyr::filter(ID!="0") |>
-  #vemos 
+    #vemos las preguntas de interés
     dplyr::select(dplyr::contains("QKUW40"),
-      #seleccionamos la religión
-      dplyr::contains("Q1012"),
+      #seleccionamos el estatus ocupacional
+      dplyr::contains("Q1005"),
       #seleccionamos el género (2. Mujer)
       dplyr::contains("Q1002"),
-      #Urbano/rural
-      "Q13",
-      #País
-      "COUNTRY"
+      #Tenencia de vivienda
+      "Q1001G",
+      #Jefatura de hogar
+      "Q1001F"
       ) 
 #eliminamos aquellos que notengan valores en ninguna de las variables de interés
 arabebarometro_selected <- arabebarometro_selected[rowSums(!is.na( arabebarometro_selected[,paste0("QKUW40_", c(1:5, 90, 97, 98, 99))] )) > 0, ]
@@ -432,11 +429,11 @@ grid.arrange(
 
 ### Utilidad
 
-1. **Análisis sustantivo**:
+1. **Análisis sustantivo**
 
-2. **Análisis longitudinal**:
+2. **Análisis longitudinal**
 
-3. **Metodología de encuestas**:
+3. **Metodología de encuestas**
 
 :::
 
@@ -444,19 +441,23 @@ grid.arrange(
 
 ::: {.notes}
 `r invisible("#_#_#_#_#_#_#_#_#_#_#_#_#_#_#_#_#")`
-**Definición**= Statistical model in which parameters of interest differ across unobserved subgroups (“latent classes”; “mixtures”). Buscamos estimar los parámetros que describen estas clases (valores no observados que inferimos explican las respuestas en variables observadas, medidas y manifiestas, y se asuem que toman valores discretos; no se asume que poseen propiedades continuas como los rasgos latentes)
+**Definición**= Statistical model in which parameters of interest differ across unobserved subgroups (“latent classes”; “mixtures”). Buscamos estimar los parámetros que describen estas clases (valores no observados que inferimos explican las respuestas en variables observadas, medidas y manifiestas, y se asumen que toman valores discretos; no se asume que poseen propiedades continuas como los rasgos latentes)
 Buscamos estimar los parámetros del modelo que describen estas clases latentes, como:
 - Las probabilidades de pertenecer a cada clase.
 - Las distribuciones de las variables observadas dentro de cada clase.
 
 - Pueden usarse como una técnica dirigida por los datos, como de tener fundamentos teóricos para utilizarlos.
 
+- Centrado en las personas u observaciones //Análisis factorial o PCA, por ej., se centra en los ítems (vertical), en reducir la dimensionalidad
+
+- A diferencia de cluster, por ejemplo, se asume que las clases **existen** y son parte del proceso por el cual se generan los datos.
+
 **Supuestos**:
 - Mezcla de distribuciones: Las respuestas observadas se explican como una combinación ponderada de distribuciones específicas de cada clase latente.
 - Independencia condicional: Dentro de cada clase latente, las variables observadas son independientes.
 
 **Tabla**
-- Medias= Identificar patrones de respuesta o perfiles promedio.	
+- Medias= Identificar patrones de respuesta o perfiles promedio. Nos centramos en el Y, en la medida de resumen por cada clase respecto a cómo esperamos que respondan y la proporción \pi esperada de individuos en cada clase.
 - Regresión= Explicar/predecir una variable respuesta en base a predictores o VIs.
 
 **Utilidad**
@@ -467,15 +468,58 @@ Buscamos estimar los parámetros del modelo que describen estas clases latentes,
 
 ## Cómo lo hace
 
+- Desde 
+
+:::: {.columns}
+
+::: {.column width="50%"}
+
+:::
+
+::: {.column width="50%"}
+
+:::
+
+::::
 
 ::: {.notes}
 `r invisible("#_#_#_#_#_#_#_#_#_#_#_#_#_#_#_#_#")`
-- explicar el EM, ver lo de las limitaciones
-- ponerlo desde el punto de vista de un psicólogo
+- Desde el punto de vista de un psicólogo de profesión
+- Por lo que entiendo, la probabilidad de observar las respuestas de los sujetos, depende de la suma por cada clase de:
+    - la probabilidad de que el sujeto pertenezca a la clase
+    - multiplicado por la probabilidad de las respuestas específicas a las categorías de las variables manifiestas según cada clase (Veremos en su conjunto en los gráficos que vienen, en el de barra/área)
+    - al sumar todo, tenemos la probabildiad total de las respuestas manifiestas observadas (datos)
+- Pero la clase y la cantidad de clases existentes no las vemos. No vemos a qué clase pertenece cada individuo. Esos son los parámetros. Por tanto, tenemos que estimarlos para ver si se ajustan a los datos. Eso se hace mediante Expectation-Maximisation (EM), que permite manejar esta información "faltante"/incompleta.
+- 
+
 
 :::
 
 ## Aplicación
+
+Abra el siguiente [**enlace al TALLER**](taller_aplicacion_lca.html)
+
+
+## Buenas prácticas
+
+- Razones para haber seleccionado los indicadores, si se basa en la teoría
+
+- Si no, razones para haber generado un modelo exploratorio
+
+- Características de los datos (descriptivos, datos perdidos)
+
+- Paquete estadístico y versión
+
+- Método de estimación
+
+- Criterios estadísticos y de interpretabilidad sustantiva para seleccionar el modelo
+
+- Tablas que incluyan al menos dos criterios de ajuste, entropía yla proabilidad promedio
+
+- Figura de clases identificadas
+
+- Número de muestra o porcentaje de la muestra en cada clase
+
 
 ## Información de la sesión
 

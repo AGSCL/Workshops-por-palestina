@@ -1,100 +1,189 @@
 ---
-title: "Aplicación al análisis de clases latentes"
-date: last-modified
+title: "Aplicar al análisis de clases latentes"
 date-format: "D [d]e MMM, YYYY"
-author: "Andrés González-Santa Cruz"
-subtitle: "Análisis de probabilidades y clasificación"
-institute: "Estudiante Doctorado en Salud Pública, Investigador joven, nDP"
-output: 
+date: last-modified
+bibliography: [_lit/referencias.bib]
+csl: "_lit/american-medical-association.csl" # (Opcional: estilo de citas, p.ej., APA)
+description: |
+  Nada más
+author: "Andrés González Santa Cruz"
+format: 
   html:
     code-fold: true
-    code-summary: "expandir para código"
-    self-contained: true
-    toc: true
-    toc-location: left
-    number-sections: true
-    css: 
-      - mylibs/styles.css
-    default-image-extension: png
-    html-math-method: mathjax
-    standalone: true
-    wrap: none
-lang: es
-theme: litera
-smooth-scroll: true
-editor: source
+    embed-resources: true
+    fig-cap-location: top
+lightbox: auto
+toc: true
+toc-depth: 5
+toc-location: left
+toc-float: true
 ---
 
+<style>
+.scrollable-content {
+  max-height: 350px;
+  overflow-y: auto;
+}
+</style>
+<style>
+pre.scrollable-code {
+  max-height: 350px;
+  overflow-y: auto;
+}
+</style>
 
-## Aplicación
+
+# Configurar
 
 ```{r}
+#| message: false
+#| include: true
+#| warning: false
+#| label: setup
+
 #eliminar archivos previos y limpiar la memoria del entorno
 rm(list=ls());gc()
 
 #cargar datos
 load("_data/palestine.RData")
 
-
 #Definir el repositorio sobre el que instalar los paquetes desde Chile
 options(repos=structure(c(CRAN="https://cran.dcc.uchile.cl/"))) 
 
-#ver si puede activarse un paquete; si no, lo instala
-#para cambiar la fuente de las letras
-if(!require(showtext)){install.packages("showtext")}
-#para elaborar gráficos
-if(!require(ggplot2)){install.packages("ggplot2")}
-#para elaborar gráficos interactivos
-if(!require(plotly)){install.packages("plotly")}
-#para mostrar imágenes
-if(!require(magick)){install.packages("magick")}
-#para hacer tablas e interactuar con informes
-if(!require(knitr)){install.packages("knitr")}
-#para manipular bases de datos
-if(!require(tidyverse)){install.packages("tidyverse")}
-#para importar y exportar bases de datos en distintos formatos
-if(!require(rio)){install.packages("rio")}
-#para explorar variables
-if(!require(psych)){install.packages("psych")}
-#para paralelizar los procesos en la CPU
-if(!require(parallel)){install.packages("parallel")}
-#hace lo mismo
-if(!require(doParallel)){install.packages("doParallel")}
+options(install.packages.check.source = "yes") # Chequea la fuente de los paquetes
 
-#Para llevar a cabo análissi de clases latentes
-if(!require(glca)){install.packages("glca")}
 
-#para generar gráficos esquemáticos
-if(!require(DiagrammeR)){install.packages("DiagrammeR")}
-#para exportar esos gráficos
-if(!require(DiagrammeRsvg)){install.packages("DiagrammeRsvg")}
-#para transformar gráficos en formato .svg
-if(!require(rsvg)){install.packages("rsvg")}
-#para visualizarlos en una presentación
-if(!require(htmlwidgets)){install.packages("htmlwidgets")}
-#permite limpiar bases de datos, entre otras funciones
-if(!require(janitor)){install.packages("janitor")}
+if(!require(pacman)){install.packages("pacman");require(pacman)}
+
+pacman::p_unlock(lib.loc = .libPaths()) #para no tener problemas reinstalando paquetes
+
+#obliga a desplegarlo en la versión de R 4.4.0
+if(Sys.info()["sysname"]=="Windows"){
+if (getRversion() != "4.4.0") { stop("Requiere versión de R 4.4.0. Actual: ", getRversion()) }
+}
+
+# Cargar o instalar paquetes necesarios
+pacman::p_load(
+  showtext,   # Para cambiar la fuente de las letras
+  ggplot2,    # Para elaborar gráficos
+  plotly,     # Para elaborar gráficos interactivos
+  magick,     # Para mostrar imágenes
+  knitr,      # Para hacer tablas e interactuar con informes
+  kableExtra, # Tablas más bonitas
+  tidyverse,  # Para manipular bases de datos
+  rio,        # Para importar y exportar bases de datos en distintos formatos
+  psych,      # Para explorar variables
+  parallel,   # Para paralelizar los procesos en la CPU
+  doParallel, # Para paralelizar los procesos en la CPU
+  glca,       # Para llevar a cabo análisis de clases latentes
+  DiagrammeR, # Para generar gráficos esquemáticos
+  DiagrammeRsvg, # Para exportar gráficos
+  rsvg,       # Para transformar gráficos en formato .svg
+  htmlwidgets, # Para visualizarlos en una presentación
+  janitor,    # Permite limpiar bases de datos, entre otras funciones
+  tableone,
+  install = TRUE # Instala los paquetes si no están presentes
+)
+
+#para comparaciones
+if(!require(chisq.posthoc.test)){devtools::install_github("ebbertd/chisq.posthoc.test")}
+
+```
+
+<br>
+
+# Describir datos
+
+```{r}
+#| class-output: center-table
+#| message: false
+#| include: true
+#| warning: false
+#| error: false
+#| eval: true
+#| paged.print: true
+#| label: "describir-pre"
+#| results: "hide"
+# Crear un subconjunto de las variables de interés
+variables_interes <- c("QKUW40_1", "QKUW40_2", "QKUW40_3", "QKUW40_4", 
+                       "QKUW40_5", "QKUW40_90", "QKUW40_97", "QKUW40_98", 
+                       "QKUW40_99", "Q1002", "Q1005")
+
+# Generar la tabla descriptiva
+tabla_descriptiva <- CreateTableOne(vars = variables_interes, data = arabebarometro_selected, factorVars = variables_interes)
+
+# Mostrar la tabla en consola
+tabla_df <- as.data.frame(print(tabla_descriptiva, showAllLevels = TRUE, missing = TRUE))
+tabla_df <-cbind.data.frame(var= rownames(tabla_df), tabla_df)
+rownames(tabla_df)<-NULL
+tabla_df$var <- sub("\\.\\.\\.\\.", "", tabla_df$var)
+tabla_df$var <- ifelse(grepl("^X", tabla_df$var), "", tabla_df$var)
 ```
 
 
 ```{r}
-#| label: "filtrar-datos"
-# Configurar la semilla para reproducibilidad
-set.seed(2125)
-
-# Seleccionar las columnas de interés
-selected_columns <- paste0("QKUW40_", c(1:5, 90, 97, 98, 99))
-
-# Filtrar el dataset para incluir solo las columnas seleccionadas
-data_selected <- arabebarometro_selected[, selected_columns]
-
-# Elegir una muestra aleatoria de 1000 filas
-sample_data <- data_selected[sample(nrow(data_selected), size = 1000), ]
-
+#| class-output: center-table
+#| message: false
+#| include: true
+#| warning: false
+#| error: false
+#| eval: true
+#| paged.print: true
+#| label: "describir"
+# Q1001F
+# Q1001F Are you the head of the household in your current place of residence?  
+# 1. 
+# 2. No 
+# 99. Refused to answer [INTERVIEWER: DO NOT READ]
+# 
+#  1   2 
+# 529 681
+# 
+# 
+# Q1001G Do you currently rent or own your current place of residence?  
+# 1. 
+# 2. Own 
+# 99. Refused to answer [INTERVIEWER: DO NOT READ]
+# $Q1001G
+# .x
+#   1   2  99 
+# 203 979  28 
+# 
+# 
+# $Q1005
+# .x
+#   1   2   3   4   5   6  99 
+# 645  46 277  52 153  32   5 
+# Q1005. Are you…  
+# 1. 
+# Employed 
+# 2. Self-Employed 
+# 3. Retired  
+# 4. A housewife 
+# 5. A student  
+# 1 
+# 2 
+# 98 99 
+# 6. Unemployed and/or looking for work [INTERVIEWER: If the respondent is 
+# currently employed and looking for work, please select response option 1] 
+# 90. Other- specify: [INTERVIEWER: DO NOT READ] 
+# 99. Refused to answer [INTERVIEWER: DO NOT READ]
+tabla_df%>% 
+  knitr::kable(caption="Descriptivos", col.names=c("Variable", "Categoría", "Total", "Perdidos"))%>%
+  kableExtra::kable_styling(bootstrap_options = c("striped", "hover"),font_size = 12) %>% 
+  kableExtra::scroll_box(width = "100%", height = "575px") 
 ```
 
+# Modelar
 
 ```{r}
+#| class-output: center-table
+#| message: false
+#| include: true
+#| warning: false
+#| error: false
+#| eval: true
+#| paged.print: true
 #| label: "glca"
 #Definimos el modelo: ítems manifiestos son explicados por una variable latente
 f_lca<- item(QKUW40_1, QKUW40_2, QKUW40_3, QKUW40_4, QKUW40_5, QKUW40_90, QKUW40_97, QKUW40_98, QKUW40_99) ~ 1
@@ -102,7 +191,7 @@ f_lca<- item(QKUW40_1, QKUW40_2, QKUW40_3, QKUW40_4, QKUW40_5, QKUW40_90, QKUW40
 seed<-2125
 #Opciones de la función
 verbose<- F # Seguir los resultados. TRUE= ver proceso de convergencia
-init <- 5e1 # puntos iniciales sobre el cual encontrar una solución. sugiero 5e2 
+init <- 1e2 # puntos iniciales sobre los cuales encontrar una solución global. sugiero 5e2 
 testiter <- 5e1 # Iteraciones para encontrar convergencia sugiero 5e2
 #Otros parámetros son : eps = 1e-6 (tolerancia)
 
@@ -119,11 +208,26 @@ lca09 <- glca(f_lca, data = arabebarometro_selected[,paste0("QKUW40_", c(1:5, 90
 lca10 <- glca(f_lca, data = arabebarometro_selected[,paste0("QKUW40_", c(1:5, 90, 97, 98, 99))], nclass= 10, seed= seed, verbose= verbose, n.init= init, decreasing=T, maxiter=1e4, testiter = testiter)
 
 new_med<-(Sys.time())
-paste0("El modelo tomó ",round(new_med-old,2)," hasta que todos los análisis fueron computados")
+paste0("El modelo tomó ",round(new_med-old,2),"segundos hasta que todos los análisis fueron computados")
 ```
 
 ```{r}
 #| label: "glca-ajuste"
+#| message: false
+#| include: true
+#| warning: false
+#| error: false
+#| eval: true
+#| fig.show: "hold"
+#| fig.align: "center"
+#| fig-pos: 'h'
+#| paged.print: true
+#| fig.cap: "Índices de ajuste modelo clases latentes"
+#| results: "hold"
+#| fig-width: 7
+#| fig-height: 4
+##| column: page
+#| fig-dpi: 600
 
 #para obtener otros índices de ajuste
 gof<-
@@ -138,24 +242,30 @@ max_classes<- nrow(gof$gtable)+1
 nboot= 10
 bootlrt<- gofglca(lca02, lca03, lca04, lca05, lca06, lca07, lca08, lca09, lca10, test = "boot", nboot= nboot, seed=2125)
 
-manualcolors <- c('indianred1', 'cornflowerblue', 'gray50', 'darkolivegreen4', 'slateblue2', 
-                  'firebrick4', 'goldenrod4')
+manualcolors <- rev(c('gray20', 'gray50', 'gray80')) # Tres colores en escala de grises
+manual_linetypes <- rev(c('solid', 'dashed', 'dotted')) # Tres estilos de línea
 levels <- c("logLik", "Gsq", "AIC", "CAIC", "BIC", "entropy", "Res.Df")
-labels <- c('Log-Verosimilitud', 'Chi2', 'Criterio de Información\nde Akaike(AIC)','AIC Corregido','Criterio de Información\nBayesiano (BIC)','Entropía','Grados de libertad residuales')
-fig_lca_fit<- cbind.data.frame(rn=2:max_classes,gof$gtable) %>%
+labels <- c('Log-Verosimilitud', 'Chi2', 'Criterio de Información\nde Akaike (AIC)', 
+            'AIC Corregido', 'Criterio de Información\nBayesiano (BIC)', 'Entropía', 
+            'Grados de libertad residuales')
+
+fig_lca_fit <- cbind.data.frame(rn = 2:max_classes, gof$gtable) %>%
   data.frame() %>% 
-  dplyr::mutate_if(is.character, as.numeric) %>%  # convert character columns to numeric
-  tidyr::pivot_longer(cols = -rn,names_to = "indices", values_to = "value", values_drop_na = F) %>%
+  dplyr::mutate_if(is.character, as.numeric) %>%  # Convertir columnas de carácter a numérico
+  #formatear la base de manera larga (es decir), cada fila es la combinación única de una probabilidad, pregunta y clase
+  tidyr::pivot_longer(cols = -rn, names_to = "indices", values_to = "value", values_drop_na = F) %>%
+  #dejar en formato factor los índices, para reconocerlos  e identificarlos
   dplyr::mutate(indices = factor(indices, levels = levels, labels = labels)) %>%
-  #si queremos sólo ver AIC y BIC, que al final suelen ser las más importantes para comparación
-  dplyr::filter(grepl("(AIC|BIC)",indices, ignore.case=T))%>%
-  dplyr::mutate(ModelIndex= factor(rn, levels=2:max_classes)) %>% 
-  ggplot(aes(x = ModelIndex, y = value, group = indices, color = indices, linetype = indices)) +
-  #ancho de la línea
+  # Filtrar solo AIC y BIC
+  dplyr::filter(grepl("(AIC|BIC)", indices, ignore.case = TRUE)) %>%
+  dplyr::mutate(ModelIndex = factor(rn, levels = 2:max_classes)) %>% 
+  ggplot(aes(x = ModelIndex, y = value, group = indices, 
+             color = indices, linetype = indices)) +
   geom_line(linewidth = 1.5) +
+  # Colores y estilos de línea personalizados
   scale_color_manual(values = manualcolors) +
-  labs(x = "Número de clases", y="Valor", color="Medida", linetype="Medida")+
-  #facet_wrap(.~indices, scales = "free_y", nrow = 4, ncol = 1) +
+  scale_linetype_manual(values = manual_linetypes) +
+  labs(x = "Número de clases", y = "Valor", color = "Medida", linetype = "Medida") +
   theme_bw()
 
 fig_lca_fit
@@ -165,40 +275,113 @@ ggsave("_figs/_fig2_comparison_glca.png",fig_lca_fit, dpi=600)
 
 ```
 
+Vemos un resumen de la salida del modelo con mejores índices de ajuste BIC. 
+
+
 ```{r}
 #| class-output: center-table
+#| message: false
+#| include: true
+#| warning: false
+#| error: false
+#| eval: true
+#| paged.print: true
 #| label: "explorar-clasificacion"
 
 #combinamos
 cbind.data.frame(rn=2:max_classes,gof$gtable, blrt= bootlrt$gtable[, "Boot p-value"]) %>%#
-  dplyr::mutate(blrt= ifelse(as.numeric(blrt)<.001, "<0.001",sprintf("%1.3f",blrt))) |> 
+  dplyr::mutate(blrt= ifelse(as.numeric(blrt)<.001, "<0.001",sprintf("%1.3f",blrt))) %>% 
   dplyr::select(rn, everything()) %>% 
-    dplyr::mutate_if(is.character, as.numeric) %>%  # convert character columns to numeric
-    knitr::kable(format="markdown", caption="Índices de ajuste modelos")
+    knitr::kable(format="markdown", caption="Índices de ajuste modelos") %>% 
+  kableExtra::kable_styling(bootstrap_options = c("striped", "hover"),font_size = 12) %>% 
+  kableExtra::scroll_box(width = "100%", height = "375px")  
 
 mejor_modelo<-
 as.numeric(cbind.data.frame(rn=2:max_classes,gof$gtable) %>% dplyr::summarise(which.min(BIC)+1))
+```
 
+<div class="scrollable-content">
+```{r}
+#| class-output: center-table
+#| message: false
+#| include: true
+#| warning: false
+#| error: false
+#| eval: true
+#| paged.print: true
+#| label: mejor-modelo
 summary(
   eval(parse(text = paste0("lca",sprintf("%02.0f",mejor_modelo))))
         ) #
+```
+</div>
 
+
+```{r}
+#| class-output: center-table
+#| message: false
+#| include: true
+#| warning: false
+#| error: false
+#| eval: true
+#| paged.print: true
+#| label: mejor-modelo-guardar
 glca_mejor_ajuste<-eval(parse(text = paste0("lca",sprintf("%02.0f",mejor_modelo))))
 ```
 
-## Analisis
+<br>
 
-```{r fig1-details, echo=T, fig.align='center', fig.pos='H', fig.cap= "Selected Model", message=FALSE, error=T, eval=T,layout="l-body-outset"}
+# Analisis
+
+<div class="scrollable-content">
+```{r}
+#| message: false
+#| include: true
+#| warning: false
+#| error: false
+#| eval: true
+#| fig.show: "hold"
+#| fig.align: "center"
+#| fig-pos: 'h'
+#| paged.print: true
+#| fig.cap: "Modelo seleccionado"
+#| label: "fig3-details"
+#| results: "hold"
+#| fig-width: 8
+#| fig-height: 8
+##| column: page
+#| fig-dpi: 600
+
 #https://rdrr.io/cran/glca/src/R/plot.glca.R
 plot(
      glca_mejor_ajuste
      , ask=F)
 ```
+</div>
+
+
 
 Vemos la entropía usando `glca_mejor_ajuste$gof$entropy` `r round(glca_mejor_ajuste$gof$entropy,2)`. Bastante buena.
 
+Ahora veremos los perfiles de las probabilidades de respuesta a los ítems condicionales a la pertenencia a una determinada clase.
 
-```{r fig2-Comparison, echo=T, fig.align='center', fig.pos='H', fig.cap= "Selected Model", message=FALSE, error=T, eval=T, layout="l-body-outset"}
+```{r}
+#| message: false
+#| include: true
+#| warning: false
+#| error: false
+#| eval: true
+#| fig.show: "hold"
+#| fig.align: "center"
+#| fig-pos: 'h'
+#| paged.print: true
+#| fig.cap: "Probabilidades de respuesta esperada por cada categoría en cada ítem según Clase estimada"
+#| label: "fig4-Comparison"
+#| results: "hold"
+#| fig-width: 8
+#| fig-height: 9
+##| column: page
+#| fig-dpi: 600
 # Configuración inicial y preparación de datos
 # Extracción de parámetros rho del modelo GLCA
 rho_glca <- do.call("bind_rows", glca_mejor_ajuste$param$rho$ALL) %>%
@@ -218,7 +401,7 @@ lcmodel_glca <- rho_glca %>%
 
 # Unión de etiquetas con probabilidades del modelo
 lcmodel_glca <- lcmodel_glca %>%
-  dplyr::mutate(pr = as.numeric(gsub("[^0-9.]+", "", prob))-1) |> 
+  dplyr::mutate(pr = as.numeric(gsub("[^0-9.]+", "", prob))-1) %>% 
   dplyr::mutate(etiqueta= dplyr::case_when(
     grepl("_1$", var) ~ "01.Boicot\nempresas", 
     grepl("_2$", var) ~ "02.Seguir\nnoticias", 
@@ -241,8 +424,8 @@ lcmodel_glca$text_label <- paste0(
 #Ordenamos las opciones por orden de aparición
 lcmodel_glca$var <- factor(lcmodel_glca$var, levels = paste0("QKUW40_", c(1:5, 90, 97, 98, 99)))
 
-# Cálculo de porcentajes de clase
-glca_pop_perc <- glca_mejor_ajuste$posterior$ALL %>%
+# Cálculo de porcentajes de clase, >.5 PROBABILIDAD DE PERTENENCIA
+glca_pop_perc_05 <- glca_mejor_ajuste$posterior$ALL %>%
   dplyr::mutate_all(~ ifelse(. > .5, 1, 0)) %>%
   dplyr::mutate(final_05 = dplyr::case_when(
     `Class 1` == 1 ~ 1, `Class 2` == 1 ~ 2, `Class 3` == 1 ~ 3
@@ -253,16 +436,33 @@ glca_pop_perc <- glca_mejor_ajuste$posterior$ALL %>%
     class = paste0("Clase", final_05),
     print = paste0(class, "\n(n=", n, ";", percent, ")")
   )
+# Cálculo de porcentajes de clase, >.7 PROBABILIDAD DE PERTENENCIA
+glca_pop_perc_07 <- glca_mejor_ajuste$posterior$ALL %>%
+  dplyr::mutate_all(~ ifelse(. > .7, 1, 0)) %>%
+  dplyr::mutate(final_07 = dplyr::case_when(
+    `Class 1` == 1 ~ 1, `Class 2` == 1 ~ 2, `Class 3` == 1 ~ 3
+  )) %>%
+  janitor::tabyl(final_07) %>%
+  dplyr::mutate(
+    percent = scales::percent(percent, accuracy = .1),
+    class = paste0("Clase", final_07),
+    print_07 = paste0(class, "[>.7 prob]","\n(n=", n, ";", percent, ")")
+  ) %>% 
+  #sacamos sujetos no clasificados
+  dplyr::filter(!is.na(final_07)) %>% 
+  #seleccionamos columnas de interés para unir y no generar redundancia
+  dplyr::select(final_07, class, print_07)
 
 # Unión con datos transformados
 lcmodel_glca <- lcmodel_glca %>%
-  dplyr::mutate(class=gsub("Class","Clase",class)) |> 
-  left_join(glca_pop_perc, by = c("class")) %>%
+  dplyr::mutate(class=gsub("Class","Clase",class)) %>% 
+  left_join(glca_pop_perc_05, by = c("class")) %>%
+  left_join(glca_pop_perc_07, by = c("class")) %>%
   dplyr::select(-class) %>%
-  dplyr::rename("class" = "print") #|> 
+  dplyr::rename("class" = "print") 
 
 # Gráfico principal
-zp <- ggplot(lcmodel_glca, aes(x = var, y = value, fill = factor(pr), label = text_label)) +
+zp <- ggplot(dplyr::mutate(lcmodel_glca, class=gsub("\n","",class)), aes(x = var, y = value, fill = factor(pr), label = text_label)) +
   geom_bar(stat = "identity", position = "stack") +
   facet_grid(class ~ .) +
   scale_fill_brewer(type = "seq", palette = "Greys", na.value = "white") +
@@ -281,29 +481,74 @@ zp <- ggplot(lcmodel_glca, aes(x = var, y = value, fill = factor(pr), label = te
   guides(fill = guide_legend(reverse = TRUE))
 
 # Exportación del gráfico y datos
+# ggplotly(zp, tooltip = c("text_label")) %>%
+#   layout(xaxis = list(showticklabels = TRUE), height = 600, width = 1000)
 ggplotly(zp, tooltip = c("text_label")) %>%
-  layout(xaxis = list(showticklabels = TRUE), height = 600, width = 800)
+  layout(
+    legend = list(
+      orientation = "h", # Leyenda horizontal
+      x = 0.5,           # Centra horizontalmente
+      y = -0.2           # Mueve la leyenda debajo del gráfico
+    ),
+    xaxis = list(showticklabels = TRUE),
+    height = 700, # Ajusta la altura
+    width = 700, # Ajusta el ancho
+    margin = list(l = 100, r = 50, t = 50, b = 150) # Márgenes para etiquetas y títulos
+  )
 
-ggsave("_figs/_fig3_LCA_glca.png", zp, dpi = 600)
+#EXPORTAMOS EL GRÁFICO NO-INTERACTIVO
+ggsave("_figs/_fig4_LCA_patrones_respuesta.png", zp, dpi = 600)
+```
 
-# htmlwidgets::saveWidget(
-#   ggplotly(zp, tooltip = c("text_label")) %>%
-#     layout(xaxis = list(showticklabels = TRUE), height = 1000, width = 1200),
-#   file = "_figs/LCA_glca_resp.html"
-# )
-
+<div class="scrollable-content">
+```{r}
 #Exportar las tablas obtenidas
 lcmodel_glca %>% 
-  dplyr::select(-text_label) %>% 
+  #excluimos columnas de procesos intermedios que pueden confundirnos
+  dplyr::select(-any_of(c("text_label", "prob", "n", "percent", "final_05", "final_07"))) %>%
+  #sacamos información redundante
+  #utilizamos doble escape (\\) para sacar símbolos que pueden ser interpretados literalmente
+  dplyr::mutate(print_07 = gsub("\\[>\\.7 prob\\]\\n", " ", print_07))%>%
+  dplyr::mutate((across(c("etiqueta", "class"),~gsub("\n", " ",.))))%>%
+  #renombramos columnas para mayor claridad
+  dplyr::rename("Prob. de pertencer a clase [P>.5]"="class", "Prob. de pertencer a clase [P>.7]"="print_07") %>% 
   {
   rio::export(.,"_output/variables_probabilidades_respuesta.xlsx")
   rio::export(.,"_output/variables_probabilidades_respuesta.csv")
-  knitr::kable(., caption= "Probabilidades de respuesta por cada clase")
+  knitr::kable(., caption= "Probabilidades de respuesta de cada clase y clasificaciones por según distintos criterios de clasificación por probabilidad posterior de pertenencia", escape=F)
   }
 ```
+</div>
 
+<br>
+
+A partir del gráfico anterior y la tabla, podemos interpretar las clases: 
+
+**Clase 1**= Describe a personas que no han tomado ninguna acción concreta, no saben o no responden.
+
+**Clase 2**= Describe a personas que han actuado de forma individual e internalizante.
+
+**Clase 3**= Describe a personas que han actuado de muchas formas, incluidas acciones colectivas, mobilizaciones y difusión.
+
+De ahí uno podría hacer interpretaciones en contraste con teorías de movimientos sociales, *advocacy groups*, etc. Por ejemplo, grupos que reflejan actitudes de desmovilización o desconexión, grupos de acciones individuales, simbólicas o de bajo costo ("participación selectiva" / *free-riding*), y un grupo cuya movilización tiende a ser colectiva, incorporando recursos y redes con mayor nivel de compromiso y participación activa.
+
+<br>
 
 ```{r}
+#| label: posterior-prob-.7
+#| echo: true
+#| paged.print: true
+#| message: false
+#| include: true
+#| warning: false
+#| error: false
+#| eval: true
+
+posterior_glca_05<-
+glca_mejor_ajuste$posterior$ALL %>% 
+    dplyr::mutate_all(~ifelse(.>.5,1,0)) %>% 
+  dplyr::mutate(final_05=dplyr::case_when(`Class 1`==1~1,`Class 2`==1~2, `Class 3`==1~3))
+
 posterior_glca_07<-
 glca_mejor_ajuste$posterior$ALL %>% 
     dplyr::mutate_all(~ifelse(.>.7,1,0)) %>% 
@@ -327,17 +572,196 @@ posterior_glca_07 %>%
     rowwise() %>%
   dplyr::mutate(count_ones = sum(c_across(starts_with("Class")) == 1)) %>%
   ungroup() %>% 
-  janitor::tabyl(final_07,count_ones) |> 
+  janitor::tabyl(final_07,count_ones) %>% 
   knitr::kable(col.names= c("Clasificación por valores superiores a 0,7 en probabilidad", "0", "1"), caption="Pruebas por probabilidades de clasificación posterior")
 ```
 
-## Información de la sesión
+Vemos que hay algunas observaciones que si clasificáramos por un criterio más estricto de pertenencia (al menos 49% de la variabilidad es explicada por la clase) no alcanzan a pertenecer a una determinada clase.
 
-```{r session_info, echo=T, paged.print=TRUE}
+<br>
+
+# Caracterización/ Comparación con otras variables
+
+## Clasificar-analizar
+
+```{r}
+#| label: classify-analyze
+#| echo: true
+#| paged.print: true
+#| message: false
+#| include: true
+#| warning: false
+#| error: false
+#| eval: true
+#| results: "hold"
+
+
+invisible("Ocupación (Q1005)")
+cbind.data.frame(ocupacion=arabebarometro_selected$Q1005, clasif_05= posterior_glca_05$final_05) %>%
+    dplyr::mutate(ocupacion= dplyr::case_when(ocupacion%in%c("1","2")~"activa", ocupacion=="5"~"estudiante", T~"inactiva"))%>%
+    dplyr::group_by(ocupacion, clasif_05)%>% 
+    dplyr::count() %>% 
+    dplyr::mutate(clasif_05= dplyr::case_when(clasif_05=="1"~"Clase1",clasif_05=="2"~"Clase2", clasif_05=="3"~"Clase3", T~NA_character_))%>%
+    tidyr::pivot_wider(names_from = clasif_05, values_from= n)%>%
+  dplyr::mutate(total= Clase1+Clase2+Clase3)%>%
+  dplyr::mutate(Clase1= glue::glue("{Clase1}({scales::percent(Clase1/total)})"))%>%
+  dplyr::mutate(Clase2= glue::glue("{Clase2}({scales::percent(Clase2/total)})"))%>%
+  dplyr::mutate(Clase3= glue::glue("{Clase3}({scales::percent(Clase3/total)})"))
+
+cbind.data.frame(ocupacion= arabebarometro_selected$Q1005, clasif_05= posterior_glca_05$final_05) %>%
+    dplyr::mutate(ocupacion= dplyr::case_when(ocupacion%in%c("1","2")~"activa", ocupacion=="5"~"estudiante", T~"inactiva"))%>%
+    janitor::tabyl(ocupacion, clasif_05)%>%
+    janitor::chisq.test()
+
+#_#_#_#_#_#_#_#_#_#_#_#_#_#_#_#_#_#_#_#_#_#_#_#_#_#_#_#_#_#_#_#_#_#_#_#_#_#_#_#_
+#_#_#_#_#_#_#_#_#_#_#_#_#_#_#_#_#_#_#_#_#_#_#_#_#_#_#_#_#_#_#_#_#_#_#_#_#_#_#_#_
+
+invisible("Sexo (Q1002)")
+cbind.data.frame(sexo=arabebarometro_selected$Q1002, clasif_05= posterior_glca_05$final_05) %>%
+  dplyr::group_by(sexo, clasif_05)%>% 
+  dplyr::count() %>% 
+  dplyr::mutate(sexo= ifelse(sexo=="1","hombre", "mujer"))%>%
+    dplyr::mutate(clasif_05= dplyr::case_when(clasif_05=="1"~"Clase1",clasif_05=="2"~"Clase2", clasif_05=="3"~"Clase3", T~NA_character_))%>%
+  tidyr::pivot_wider(names_from = clasif_05, values_from= n)%>%
+  dplyr::mutate(total= Clase1+Clase2+Clase3)%>%
+  dplyr::mutate(Clase1= glue::glue("{Clase1}({scales::percent(Clase1/total)})"))%>%
+  dplyr::mutate(Clase2= glue::glue("{Clase2}({scales::percent(Clase2/total)})"))%>%
+  dplyr::mutate(Clase3= glue::glue("{Clase3}({scales::percent(Clase3/total)})"))
+
+chisq.test(arabebarometro_selected$Q1002, posterior_glca_05$final_05) 
+
+chisq.posthoc.test(table(arabebarometro_selected$Q1002,posterior_glca_05$final_05))
+
+cbind.data.frame(sexo=arabebarometro_selected$Q1002, clasif_07= posterior_glca_07$final_07) %>%
+  dplyr::group_by(sexo, clasif_07) %>%
+  dplyr::count() %>% 
+  dplyr::mutate(sexo= ifelse(sexo=="1","hombre", "mujer"))%>%
+  dplyr::mutate(clasif_07= dplyr::case_when(clasif_07=="1"~"Clase1",clasif_07=="2"~"Clase2", clasif_07=="3"~"Clase3", T~NA_character_))%>%
+  tidyr::pivot_wider(names_from = clasif_07, values_from= n)%>%
+  dplyr::mutate(total= Clase1+Clase2+Clase3)%>%
+  dplyr::mutate(Clase1= glue::glue("{Clase1}({scales::percent(Clase1/total)})"))%>%
+  dplyr::mutate(Clase2= glue::glue("{Clase2}({scales::percent(Clase2/total)})"))%>%
+  dplyr::mutate(Clase3= glue::glue("{Clase3}({scales::percent(Clase3/total)})"))
+
+#excluimos los casos perdidos
+chisq.test(table(arabebarometro_selected$Q1002[!is.na(posterior_glca_07$final_07)],posterior_glca_07$final_07[!is.na(posterior_glca_07$final_07)]))
+
+#obtenemos los resultados
+chisq.posthoc.test(table(arabebarometro_selected$Q1002[!is.na(posterior_glca_07$final_07)],posterior_glca_07$final_07[!is.na(posterior_glca_07$final_07)]))
+
+```
+
+## Modelo con covariable
+
+```{r}
+#| label: regresion-clases
+#| echo: true
+#| paged.print: true
+#| message: false
+#| include: true
+#| warning: false
+#| error: false
+#| eval: true
+#| results: "hold"
+f_lca_adj<- item(QKUW40_1, QKUW40_2, QKUW40_3, QKUW40_4, QKUW40_5, QKUW40_90, QKUW40_97, QKUW40_98, QKUW40_99) ~ Q1002 + Q1005
+lca03_adj <- glca(f_lca_adj, data = arabebarometro_selected[,c(paste0("QKUW40_", c(1:5, 90, 97, 98, 99)),"Q1002", "Q1005")]%>% dplyr::mutate(Q1005= dplyr::case_when(Q1005%in%c("1","2")~"activa", Q1005=="5"~"estudiante", T~"inactiva")), 
+    nclass= 3, 
+    seed= seed, 
+    verbose= verbose, 
+    n.init= init, 
+    decreasing=T, 
+    maxiter=1e4, 
+    testiter = testiter)
+```
+
+```{r}
+#| label: regresion-clases-coeficientes
+#| echo: true
+#| paged.print: true
+#| message: false
+#| include: true
+#| warning: false
+#| error: false
+#| eval: true
+#| results: "as.is"
+lca03_adj$coefficient$ALL
+```
+
+
+- Podría decirse que hombres empleados (intercepto) tienen mayores chances de pertenecer a la clase 1 vs. la 3  (OR= 11.3), y 2 vs. 3 (OR= 27.7)
+- Encontrarse inactivo (retirado, dueñ@ de casa o desempleado y buscando trabajo vs. empleados) se asocia a menores chances de pertenecer a la clase 1 vs. la 3.
+- No hay evidencia de una asociación entre pertenecer a una clase y el sexo.
+
+Tener en cuenta la escasez de observaciones para algunas categorías de respuesta.
+
+```{r}
+#| label: regresion-clases-diagnosticos
+#| echo: true
+#| paged.print: true
+#| message: false
+#| include: true
+#| warning: false
+#| error: false
+#| eval: true
+#| results: "as.is"
+#| 
+# Crear un data frame combinado con ocupación, clasificación y sexo
+data_combined <- cbind.data.frame(
+    ocupacion = arabebarometro_selected$Q1005,
+    clasif_05 = posterior_glca_05$final_05,
+    sexo = arabebarometro_selected$Q1002
+) %>%
+    # Reemplazar valores en la variable 'ocupacion'
+    mutate(
+        ocupacion = case_when(
+            ocupacion %in% c("1", "2") ~ "activa",
+            ocupacion == "5" ~ "estudiante",
+            TRUE ~ "inactiva"
+        )
+    )
+
+# Crear tabla de frecuencias cruzadas con xtabs
+tabla_cruzada <- xtabs(~ clasif_05 + ocupacion + sexo, data = data_combined)
+```
+
+
+# Información de la sesión
+
+```{r}
+#| label: session-info-gral
+#| echo: true
+#| paged.print: true
 #guardamos la información generada
-save.image("_data/palestine.RData")
+save.image("_data/palestine2.RData")
+
 #vemos desde donde se producen las librerías
-Sys.getenv("R_LIBS_USER")
-#ponemos información de la sesión: Sistema operativo, paquetes, idisioncracias, etc.
-sessionInfo()
+message(paste0("R library: ", Sys.getenv("R_LIBS_USER")))
+message(paste0("Date: ",withr::with_locale(new = c('LC_TIME' = 'C'), code =Sys.time())))
+message(paste0("Editor context: ", getwd()))
+
+#plataforma donde se desplegó el código
+devtools::session_info()$platform
+```
+
+
+```{r}
+#| class-output: center-table
+#| message: true
+#| echo: true
+#| error: true
+#| paged.print: true
+#| eval: true
+#| label: "session-info-r"
+
+sesion_info <- devtools::session_info()
+dplyr::select(
+  tibble::as_tibble(sesion_info$packages),
+  c(package, loadedversion, source)
+) %>% 
+ knitr::kable(caption = "Información paquetes de R", format = "html",
+      col.names = c("Paquete", "Versión", "Fuente"),
+    row.names = FALSE,
+      align = c("c", "l", "r")) %>% 
+  kableExtra::kable_styling(bootstrap_options = c("striped", "hover"),font_size = 12) %>% 
+  kableExtra::scroll_box(width = "100%", height = "375px")  
 ```
