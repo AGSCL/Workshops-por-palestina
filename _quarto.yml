@@ -14,7 +14,8 @@ website:
 format:
   html:
     theme: litera
-    css: mylibs/styles.css
+    css:
+      - mylibs/styles.css
     toc: true
     toc-location: left
     number-sections: true
