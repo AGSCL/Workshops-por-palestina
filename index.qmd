@@ -1,7 +1,15 @@
 ---
 title: "Workshops por palestina"
 subtitle: "Defendiendo la Justicia y los Derechos Humanos"
-format: html
+format:
+  html:
+    theme: litera
+    css:
+      - mylibs/styles.css
+    toc: true
+    toc-location: left
+    number-sections: true
+    smooth-scroll: true
 execute:
   echo: false
 header-includes:
