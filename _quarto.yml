@@ -14,8 +14,9 @@ website:
 format:
   html:
     theme: litera
-    css:
-      - https://raw.githubusercontent.com/AGSCL/Workshops-por-palestina/refs/heads/master/mylibs/styles.css
+    lang: es
+    self-contained: true
+    css: mylibs/styles.css
     toc: true
     toc-location: left
     number-sections: true
