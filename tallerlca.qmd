@@ -361,6 +361,7 @@ theme(legend.position = "none")
 | **Continua**    | Factorial             | Rasgos latentes       | Efectos aleatorios              | Mezcla finita             |
 | **Discreta**    | TRI                   | Clases latentes       | Efectos aleatorios logísticos   | Logística, Mezcla finita  |
 </div>
+<div style="text-align: center; font-size: small; font-style: italic;"> Adaptado de: <a href="https://daob.nl/wp-content/uploads/2015/06/oberski-LCA.pdf" target="_blank">Oberski, 2016</a> </div>
 
 ::: 
 
@@ -444,21 +445,24 @@ grid.arrange(
 **Definición**= Statistical model in which parameters of interest differ across unobserved subgroups (“latent classes”; “mixtures”). Buscamos estimar los parámetros que describen estas clases (valores no observados que inferimos explican las respuestas en variables observadas, medidas y manifiestas, y se asumen que toman valores discretos; no se asume que poseen propiedades continuas como los rasgos latentes)
 Buscamos estimar los parámetros del modelo que describen estas clases latentes, como:
 - Las probabilidades de pertenecer a cada clase.
-- Las distribuciones de las variables observadas dentro de cada clase.
+- Las distribuciones esperadas (prob. respuesta, por ej.) de las variables observadas dentro de cada clase.
 
-- Pueden usarse como una técnica dirigida por los datos, como de tener fundamentos teóricos para utilizarlos.
-
-- Centrado en las personas u observaciones //Análisis factorial o PCA, por ej., se centra en los ítems (vertical), en reducir la dimensionalidad
-
+- Pueden usarse como una técnica dirigida por los datos, como de tener fundamentos teóricos para utilizarlos. Centrado en las personas u observaciones //Análisis factorial o PCA, por ej., se centra en los ítems (vertical), en reducir la dimensionalidad
 - A diferencia de cluster, por ejemplo, se asume que las clases **existen** y son parte del proceso por el cual se generan los datos.
+-  Permite manejar datos perdidos (cuando no todos son perdidos), maneja variables de múltiples tipos
 
 **Supuestos**:
 - Mezcla de distribuciones: Las respuestas observadas se explican como una combinación ponderada de distribuciones específicas de cada clase latente.
 - Independencia condicional: Dentro de cada clase latente, las variables observadas son independientes.
+- Se recomienda: Highly “discriminative” variables (necessary to create classes/subgroups) > variable design/selection
+- Exhaustividad: Cada individuo pertenece a exactamente una clase latente
+- A veces se puede relajar el supuesto de independencia condicional, pero hay que conocer a priori los datos y de donde provienen y la naturaleza de las covariables y su relación. Si no, usar factor mixture models o growth mixture models
 
 **Tabla**
 - Medias= Identificar patrones de respuesta o perfiles promedio. Nos centramos en el Y, en la medida de resumen por cada clase respecto a cómo esperamos que respondan y la proporción \pi esperada de individuos en cada clase.
 - Regresión= Explicar/predecir una variable respuesta en base a predictores o VIs.
+- Oberski: A different name for latent class analysis is “binomial (finite) mixture model”.
+- Es un modelo probabilístico que asume que las relaciones entre las variables observadas se explican por una variable categórica no observada 
 
 **Utilidad**
 - 1) - Creación de tipologías de encuestados (ej.: tolerancia, valores, clase social). - Modelos multinivel no paramétricos.
@@ -468,34 +472,134 @@ Buscamos estimar los parámetros del modelo que describen estas clases latentes,
 
 ## Cómo lo hace
 
-- Desde 
-
 :::: {.columns}
 
 ::: {.column width="50%"}
+
+- Qué queremos estimar
+
+- Algoritmo EM
+
+```{r}
+#| label: "EM"
+#| out.width: "80%"
+#https://dreampuf.github.io/GraphvizOnline/
+grViz("
+digraph EM_Latent_Classes {
+  graph [rankdir = TB]
+  nodesep=0.4; // Reduce la separación horizontal entre nodos
+  ranksep=0.4; // Reduce la separación vertical entre filas
+  
+  node [shape = rectangle, style = filled, fillcolor = lightgrey, fontname = Helvetica, fontsize=10]
+
+  # Nodos
+  A [label = '(0) Estimar parámetros iniciales']
+  B [label = '(1) Calcular probabilidad posterior\n(estimación de clase latente)']
+  C [label = '(2) Actualizar parámetros\n(con base en la probabilidad post)\n', fontsize=9]
+
+  # Subgráficos para controlar alineaciones
+  { rank = same; A }
+  { rank = same; B }
+  { rank = same; C }
+
+  # Flechas
+  A -> B
+  B -> C [arrowhead = normal, dir = forward, tailport = w, headport = w]
+  C -> B [arrowhead = normal, dir = forward, tailport = e, headport = e, constraint = false]
+}
+")
+```
+<div style="text-align: center; font-size: small; font-style: italic;"> Adaptado de: <a href="https://daob.nl/wp-content/uploads/2015/06/oberski-LCA.pdf" target="_blank">Oberski, 2016</a> </div>
+
+
 
 :::
 
 ::: {.column width="50%"}
 
+- Máxima local vs. global
+- Valores iniciales
+
+```{r}
+#| label: "local maxima"
+#| out.width: "70%"
+#| fig.cap: "Soluciones locales vs. globales"
+
+img <- image_read("_figs/valores_inicio.png")
+cropped_img <- image_crop(img, geometry = "2500x1500+200+400")
+cropped_img
+```
+<div style="text-align: center; font-size: small; font-style: italic;"> Adaptado de: <a href="https://www.risis2.eu/wp-content/uploads/2019/09/LCM-with-STATA_-Barbara_Antonioli_Mantegazzini_rev.pdf" target="_blank">Mantegazzini, 2019</a> </div>
+
+
+
+- Ejemplo en esta [**página**](https://agscl3.shinyapps.io/Ejemplo_ACL/)
+
+- En el ejemplo, **poLCA** requiere variables politómicas, se pueden convertir las variables continuas (siempre con el riesgo de introducir sesgo; por ej., un día por distribuciones de semanas de embarazo, dividí en 25% los valores y los clasifiqué, pero sin reconocer el problema y la naturaleza. Luego hable con una matrona, y me proporcionó una clasificación mucho mejor de las semanas [21-25 de gestación, por ej.] )
 :::
 
 ::::
 
 ::: {.notes}
 `r invisible("#_#_#_#_#_#_#_#_#_#_#_#_#_#_#_#_#")`
-- Desde el punto de vista de un psicólogo de profesión
+- Desde el **punto de vista de un psicólogo de profesión**
 - Por lo que entiendo, la probabilidad de observar las respuestas de los sujetos, depende de la suma por cada clase de:
     - la probabilidad de que el sujeto pertenezca a la clase
     - multiplicado por la probabilidad de las respuestas específicas a las categorías de las variables manifiestas según cada clase (Veremos en su conjunto en los gráficos que vienen, en el de barra/área)
     - al sumar todo, tenemos la probabildiad total de las respuestas manifiestas observadas (datos)
 - Pero la clase y la cantidad de clases existentes no las vemos. No vemos a qué clase pertenece cada individuo. Esos son los parámetros. Por tanto, tenemos que estimarlos para ver si se ajustan a los datos. Eso se hace mediante Expectation-Maximisation (EM), que permite manejar esta información "faltante"/incompleta.
-- 
+- EXPECTATION: Calcula las probabilidades posteriores de pertenencia a cada clase para cada individuo, usando los parámetros actuales.
+- MAXIMIZATION: Actualiza los parámetros del modelo (π y ρ) maximizando la verosimilitud, usando las probabilidades posteriores calculadas en el paso E. Este proceso se repite hasta que los parámetros convergen
 
+- **Página**= 40% de los datos estarán en clase 1 ($\pi_1$) y el resto en clase 2 ($\pi_2$). $\rho_1$ (rho) la probabilidad de respuesta a "Sí" será de 0,8 a la primera pregunta, a la segunda, será de 0,3 ($\rho_2$).
+- Primero, hacemos una suposición inicial sobre a qué grupo pertenece cada dato (calcula la probabilidad posterior  de cada observación pertenezca a cada clase, dado el modelo). Luego, mejoras tus suposiciones de $\pi$, $rho_1$ y $rho_2$ calculando las probabilidades para cada grupo. Repites estos pasos (suponer y mejorar) hasta que las respuestas no cambian mucho, es decir: converge (la log-verosimilitud no cambia).
+- Los parámetros iniciales (como probabilidades de pertenencia a clases y probabilidades de respuesta condicionadas a las clases) se asignan aleatoriamente. Esos son los puntos de partida, pero puede que no encontremos el **máximo global**. Para ello generamos distintos puntos de partida.
+- Vemos cómo mejora el modelo con cada iteración, hasta una determinada cantidad de iteraciones en que ya no mejora o muy poco. Vemos también cuál fue la menos sesgada.
 
 :::
 
-## Aplicación
+## Aplicación (1)
+
+- Muestra requerida (Nylund-Gibson & Choi, 2018; Weller et al., 2020)
+
+- Clases pequeñas (<5%), poco replicables (Herle et al., 2020)
+
+::: {.notes}
+`r invisible("#_#_#_#_#_#_#_#_#_#_#_#_#_#_#_#_#")`
+- 300>= Nylund-Gibson and Choi (2018)
+- Indicadores, más mejor, 4-20, depende
+- Un heurístico de N>= 500 se ha sugerido (https://doi.org/10.1037/met0000486)
+- Parece que entre N ~~300-1000 es el rango para funcionar bien
+- O muestras dependiendo de los parámetros a estimar. Algunos dicen, por cada parámetro libre, 5 observaciones; otros, 20.
+- #parametros libres= (clases latentes - 1)+ (parámetros condicionales= sumar de 1 a m[var manifiestas]* (clases x (categorías/cada una -1)) )
+$$(k-1)+ (\,\,\sum_{i=1}^{m}(k\times(c_i-1))\,\,)$$
+
+- π (pi): Probabilidades de clase latente - proporción de individuos en cada clase
+- ρ (rho): Probabilidades condicionales de respuesta - probabilidad de cada respuesta dado que pertenece a una clase
+- Las probabilidades posteriores indican la probabilidad de que cada individuo pertenezca a cada clase latente, dado su patrón de respuestas observadas
+
+
+**Ajuste**
+- BIC: confiable y debe ser reportado
+- Probabilidades posteriores promedio >.7 indican clases bien separadas (Nagin, 2005)
+- Elementos fuera de la diagonal en la matriz de probabildiades posteriores. 0,8 o 0,9 o más
+- Entropía: la absoluta es poco interpretable. cuán certero es el modelo definiendo clases. >0,6 aceptable, o >0,8 bueno, capacidad de clasificación. La entropía suelen disminuir a medida que incrementan las clases (Zhang)
+:::
+
+
+## Aplicación (2)
+
+- Clasificaciones
+
+
+::: {.notes}
+`r invisible("#_#_#_#_#_#_#_#_#_#_#_#_#_#_#_#_#")`
+
+- Clasificación dura= obs. en la clase a la que tienen más alta probabilidad de pertenecer
+- la clasificación dura no considera la incertidumbre propia de la clasificación 
+- lasificación dura (Hard-classification) a clases basados en la probabilidad posterior máxima es utilizada para describir las características y predictores más probables de las clases (Nagin 2005). Notar que este método asume un grado de incertidumbre, por lo que las clases identificadas es probabilístico más que real
+
+:::
 
 Abra el siguiente [**enlace al TALLER**](taller_aplicacion_lca.html)
 
@@ -520,6 +624,31 @@ Abra el siguiente [**enlace al TALLER**](taller_aplicacion_lca.html)
 
 - Número de muestra o porcentaje de la muestra en cada clase
 
+<div style="text-align: center; font-size: small; font-style: italic;"> Adaptado de: <a href="https://journals.sagepub.com/doi/full/10.1177/0095798420930932" target="_blank">Weller et al, 2020</a> </div>
+
+## Extensiones
+
+- Ver relación con otras variables
+  + Clasificar-analizar
+  + 1-step
+  + 3-step
+
+- Con datos longitudinales
+
+- Tener en cuenta efectos aleatorios de las variables por grupos
+
+::: {.notes}
+`r invisible("#_#_#_#_#_#_#_#_#_#_#_#_#_#_#_#_#")`
+- Classify-analyze= Zhang, Z., Abarda, A., Contractor, A. A., Wang, J., & Dayton, C. M. (2018)
+1. **Clasificar:** Se calcula la probabilidad posterior de cada paciente y se le asigna a la clase latente en la que tenga la mayor probabilidad.
+2. **Analizar:** Se usa un modelo de regresión logística para analizar, incluyendo como variables la pertenencia a la clase latente, el tratamiento, y su interacción con el resultado que se quiere estudiar.
+
+
+-  Si la entropía es >0.80, los resultados no variarán mucho entre los tipos de relaciones con otras variables
+
+-**Long**: Puede capturar la heterogeneidad de las medidas repetidas en el tiempo
+
+:::
 
 ## Información de la sesión
 

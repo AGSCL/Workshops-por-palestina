@@ -1,0 +1,13 @@
+name: Ejemplo_ACL
+title: Ejemplo_ACL
+username: agscl3
+account: agscl3
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 13654384
+bundleId: 9593691
+url: https://agscl3.shinyapps.io/Ejemplo_ACL/
+version: 1
+asMultiple: FALSE
+asStatic: FALSE
+ignoredFiles: palestine2.RData
