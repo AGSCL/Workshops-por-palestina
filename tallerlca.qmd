@@ -535,7 +535,6 @@ cropped_img
 
 - Ejemplo en esta [**página**](https://agscl3.shinyapps.io/Ejemplo_ACL/)
 
-- En el ejemplo, **poLCA** requiere variables politómicas, se pueden convertir las variables continuas (siempre con el riesgo de introducir sesgo; por ej., un día por distribuciones de semanas de embarazo, dividí en 25% los valores y los clasifiqué, pero sin reconocer el problema y la naturaleza. Luego hable con una matrona, y me proporcionó una clasificación mucho mejor de las semanas [21-25 de gestación, por ej.] )
 :::
 
 ::::
@@ -555,6 +554,8 @@ cropped_img
 - Primero, hacemos una suposición inicial sobre a qué grupo pertenece cada dato (calcula la probabilidad posterior  de cada observación pertenezca a cada clase, dado el modelo). Luego, mejoras tus suposiciones de $\pi$, $rho_1$ y $rho_2$ calculando las probabilidades para cada grupo. Repites estos pasos (suponer y mejorar) hasta que las respuestas no cambian mucho, es decir: converge (la log-verosimilitud no cambia).
 - Los parámetros iniciales (como probabilidades de pertenencia a clases y probabilidades de respuesta condicionadas a las clases) se asignan aleatoriamente. Esos son los puntos de partida, pero puede que no encontremos el **máximo global**. Para ello generamos distintos puntos de partida.
 - Vemos cómo mejora el modelo con cada iteración, hasta una determinada cantidad de iteraciones en que ya no mejora o muy poco. Vemos también cuál fue la menos sesgada.
+
+- En el ejemplo, **poLCA** requiere variables politómicas, se pueden convertir las variables continuas (siempre con el riesgo de introducir sesgo; por ej., un día por distribuciones de semanas de embarazo, dividí en 25% los valores y los clasifiqué, pero sin reconocer el problema y la naturaleza. Luego hable con una matrona, y me proporcionó una clasificación mucho mejor de las semanas [21-25 de gestación, por ej.] )
 
 :::
 
