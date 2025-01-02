@@ -123,12 +123,12 @@ o consultartle. De la misma forma, es necesario que tenga en cuenta mi formació
 
 :::: {.columns}
 
-::: {.column width="50%"}
+::: {.column width="45%"}
 ```{r}
 #| echo: true
 #| include: true
 #| code-fold: true
-#| fig-align: "center"
+#| fig-align: "left"
 #| code-summary: "expandir para código"
 #| warnings: false
 #| message: false
@@ -146,7 +146,7 @@ arabebarometro<-
 rio::import(paste0(gsub("palestine$","", wdpath), "ArabBarometer_WaveVIII_English_v1/ArabBarometer_WaveVIII_English_v1.csv"))
 
 #Previsualizar base de datos
-dplyr::glimpse(arabebarometro)
+glimpse(arabebarometro, width = 40) 
 ```
 <div style="text-align: center; font-size: small; font-style: italic;"> Fuente: <a href="https://www.arabbarometer.org/surveys/arab-barometer-wave-viii/#" target="_blank">Data Sets
 Arab Barometer Wave VIII: Base de datos y Reporte técnico</a> </div>
@@ -171,7 +171,13 @@ Además, utilizaremos otras variables
 <!-- In which of the following ways, if any, have you stood in solidarity with Gaza? -->
 :::
 
+::: {.column width="5%"}
+
+:::
+
 ::: {.column width="50%"}
+
+Eliminamos casos con IDs inválidos (n= 2.400) y que tengan  al menos 2 perdidos en las variables de apoyo (n=9.609). Nos quedamos con 1.210 observaciones.
 
 ::: {.nonincremental}
 
@@ -205,7 +211,7 @@ arabebarometro |>
       "Q1001F"
       ) 
 #eliminamos aquellos que notengan valores en ninguna de las variables de interés
-arabebarometro_selected <- arabebarometro_selected[rowSums(!is.na( arabebarometro_selected[,paste0("QKUW40_", c(1:5, 90, 97, 98, 99))] )) > 0, ]
+arabebarometro_selected <- arabebarometro_selected[rowSums(!is.na( arabebarometro_selected[,paste0("QKUW40_", c(1:5, 90, 97, 98, 99))] )) > 1, ]
 ```
 
 ```{r }
