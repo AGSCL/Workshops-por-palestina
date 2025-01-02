@@ -109,14 +109,61 @@ variables_interes <- c("QKUW40_1", "QKUW40_2", "QKUW40_3", "QKUW40_4",
                        "QKUW40_5", "QKUW40_90", "QKUW40_97", "QKUW40_98", 
                        "QKUW40_99", "Q1002", "Q1005")
 
+
+# Crear un subconjunto de las variables de interés, actualizado
+variables_interes_act <- 
+c("Apoyo1. Boicot a empresas que apoyan a Israel", "Apoyo2. Seguimiento continuo de noticias relacionadas con la guerra", 
+"Apoyo3. Participación en actividades públicas de solidaridad", 
+"Apoyo4. Difusión de mensajes de solidaridad en redes sociales", 
+"Apoyo5. Donaciones monetarias a los residentes de Gaza", "Apoyo90. Otro – Por favor, especifique:", 
+"Apoyo97. No he tomado ninguna de estas acciones", "Apoyo98. No sabe", 
+"Apoyo99. Se niega a responder", "Sexo", "Estatus ocupacional")
+
 # Generar la tabla descriptiva
-tabla_descriptiva <- CreateTableOne(vars = variables_interes, data = arabebarometro_selected, factorVars = variables_interes)
+tabla_descriptiva <- CreateTableOne(vars = variables_interes_act, 
+      data = arabebarometro_selected%>%
+         dplyr::mutate(across(
+           starts_with("QKUW40_"), ~dplyr::case_when(
+             .==0~"No", .==1~"Sí", T~NA_character_
+           )))%>%
+        dplyr::mutate(Q1005= dplyr::case_when(
+    Q1005 == "1" ~ "Empleado",
+    Q1005 == "2" ~ "Auto-empleado",
+    Q1005 == "3" ~ "Retirado",
+    Q1005 == "4" ~ "Dueñ@ de casa",
+    Q1005 == "5" ~ "Estudiante",
+    Q1005 == "6" ~ "Desempleado/buscando",
+    Q1005 == "99" ~ "No responde",
+    TRUE ~ NA_character_
+  ))%>%
+    dplyr::mutate(Q1002= dplyr::case_when(
+      Q1002== "1"~ "Hombre",
+      Q1002== "2"~ "Mujer",
+      T~ NA_character_)) %>%
+  dplyr::rename(
+    "Apoyo1. Boicot a empresas que apoyan a Israel" = "QKUW40_1",
+    "Apoyo2. Seguimiento continuo de noticias relacionadas con la guerra" = "QKUW40_2",
+    "Apoyo3. Participación en actividades públicas de solidaridad" = "QKUW40_3",
+    "Apoyo4. Difusión de mensajes de solidaridad en redes sociales" = "QKUW40_4",
+    "Apoyo5. Donaciones monetarias a los residentes de Gaza" = "QKUW40_5",
+    "Apoyo90. Otro – Por favor, especifique:" = "QKUW40_90",
+    "Apoyo97. No he tomado ninguna de estas acciones" = "QKUW40_97",
+    "Apoyo98. No sabe" = "QKUW40_98",
+    "Apoyo99. Se niega a responder" = "QKUW40_99", 
+    "Sexo" = "Q1002",
+    "Estatus ocupacional" = "Q1005"), 
+  factorVars = variables_interes_act)
 
 # Mostrar la tabla en consola
 tabla_df <- as.data.frame(print(tabla_descriptiva, showAllLevels = TRUE, missing = TRUE))
-tabla_df <-cbind.data.frame(var= rownames(tabla_df), tabla_df)
+tabla_df <-cbind.data.frame(var= gsub("\\s+", " ",gsub("\\.", " ", rownames(tabla_df))), tabla_df)
 rownames(tabla_df)<-NULL
-tabla_df$var <- sub("\\.\\.\\.\\.", "", tabla_df$var)
+# tabla_df$var <- sub("\\.\\.", ": ", tabla_df$var)
+# tabla_df$var <- sub("\\.\\.\\.\\.", "", tabla_df$var)
+# tabla_df$var <- sub("\\.", " ", tabla_df$var)
+# tabla_df$var <- sub("\\.", " ", tabla_df$var)
+# tabla_df$var <- sub("\\.", " ", tabla_df$var)
+# tabla_df$var <- sub("\\.$", "", tabla_df$var)
 tabla_df$var <- ifelse(grepl("^X", tabla_df$var), "", tabla_df$var)
 ```
 
@@ -130,44 +177,7 @@ tabla_df$var <- ifelse(grepl("^X", tabla_df$var), "", tabla_df$var)
 #| eval: true
 #| paged.print: true
 #| label: "describir"
-# Q1001F
-# Q1001F Are you the head of the household in your current place of residence?  
-# 1. 
-# 2. No 
-# 99. Refused to answer [INTERVIEWER: DO NOT READ]
-# 
-#  1   2 
-# 529 681
-# 
-# 
-# Q1001G Do you currently rent or own your current place of residence?  
-# 1. 
-# 2. Own 
-# 99. Refused to answer [INTERVIEWER: DO NOT READ]
-# $Q1001G
-# .x
-#   1   2  99 
-# 203 979  28 
-# 
-# 
-# $Q1005
-# .x
-#   1   2   3   4   5   6  99 
-# 645  46 277  52 153  32   5 
-# Q1005. Are you…  
-# 1. 
-# Employed 
-# 2. Self-Employed 
-# 3. Retired  
-# 4. A housewife 
-# 5. A student  
-# 1 
-# 2 
-# 98 99 
-# 6. Unemployed and/or looking for work [INTERVIEWER: If the respondent is 
-# currently employed and looking for work, please select response option 1] 
-# 90. Other- specify: [INTERVIEWER: DO NOT READ] 
-# 99. Refused to answer [INTERVIEWER: DO NOT READ]
+
 tabla_df%>% 
   knitr::kable(caption="Descriptivos", col.names=c("Variable", "Categoría", "Total", "Perdidos"))%>%
   kableExtra::kable_styling(bootstrap_options = c("striped", "hover"),font_size = 12) %>% 
@@ -292,6 +302,8 @@ Vemos un resumen de la salida del modelo con mejores índices de ajuste BIC.
 cbind.data.frame(rn=2:max_classes,gof$gtable, blrt= bootlrt$gtable[, "Boot p-value"]) %>%#
   dplyr::mutate(blrt= ifelse(as.numeric(blrt)<.001, "<0.001",sprintf("%1.3f",blrt))) %>% 
   dplyr::select(rn, everything()) %>% 
+  dplyr::rename("N de clases"="rn")%>%
+  dplyr::mutate(across(c("logLik","AIC","CAIC", "BIC", "entropy", "Gsq"),~sprintf("%1.2f",.)))%>%
     knitr::kable(format="markdown", caption="Índices de ajuste modelos") %>% 
   kableExtra::kable_styling(bootstrap_options = c("striped", "hover"),font_size = 12) %>% 
   kableExtra::scroll_box(width = "100%", height = "375px")  
