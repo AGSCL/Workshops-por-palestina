@@ -6,3 +6,7 @@
 /.quarto/
 *.gsheet
 site_libs/*
+.Rdata
+.httr-oauth
+.DS_Store
+.quarto

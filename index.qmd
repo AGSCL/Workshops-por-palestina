@@ -17,7 +17,10 @@ Si estás interesado/a en inscribirte en alguno de nuestros talleres, a continua
 
 Si quieres donar simplemente, puedes ver este video sobre cómo hacerlo:
 
-<iframe width="560" height="315" src="https://www.youtube.com/embed/66P3FNX6bHY" frameborder="0" allowfullscreen></iframe>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/66P3FNX6bHY" frameborder="0" allowfullscreen alt="https://youtu.be/66P3FNX6bHY"></iframe>
+
+[Enlace a video tutorial](https://www.youtube.com/embed/66P3FNX6bHY)
+
 
 # Workshops disponibles
 
@@ -28,7 +31,7 @@ _'¿De cuál de las siguientes maneras, si es que hay alguna, te has solidarizad
 <div style="display: flex; align-items: center; gap: 15px; margin-top: 20px;">
   <img src="https://raw.githubusercontent.com/AGSCL/CV/main/CURSO-COMPUTACION-ALONSO.jpg" alt="Foto de instructor" style="width: 150px; height: auto; filter: grayscale(100%); border-radius: 5px;">
   <p style="color: #4a4a4a; font-size: 16px; line-height: 1.6;">
-    Este curso está diseñado para introducir a los participantes en el uso de métodos avanzados de análisis de clases latentes, aplicando datos del Barómetro Árabe para explorar patrones de solidaridad hacia Gaza. ([**PRESENTACIÓN**](tallerlca.html)).
+    Este taller está pensado para introducir a l@s participantes en el uso de métodos aplicados de análisis de clases latentes, utilizando datos del Barómetro Árabe para explorar patrones de solidaridad hacia Gaza. ([**PRESENTACIÓN**](tallerlca.html)).
   </p>
 </div>
 <span style="font-size: x-small;">Andrés González Santa Cruz: Estudiante Doctorado en Salud Pública, Mg Métodos de Investigación Social</span>
