@@ -10,3 +10,6 @@ paquetes <- c("showtext", "ggplot2", "plotly", "grid", "gridExtra", "magick", "k
 download.packages(paquetes, destdir = "paquetes_tar", type = "source")
 
 system("tar -czvf paquetes.tar.gz paquetes_tar")
+
+
+unlink("paquetes_tar", recursive = TRUE)
