@@ -93,9 +93,6 @@ if(!require(htmlwidgets)){install.packages("htmlwidgets")}
 #permite limpiar bases de datos, entre otras funciones
 if(!require(janitor)){install.packages("janitor")}
 
-# Elegr ubicación entorno
-wdpath <- getwd()
-
 # Activar showtext
 #showtext_auto()
 
@@ -143,7 +140,7 @@ o consultartle. De la misma forma, es necesario que tenga en cuenta mi formació
 #Si no, puede importarlos desde (ventana interactiva)
 #arabebarometro<- rio::import(choose.files())
 arabebarometro<-
-rio::import(paste0(gsub("palestine$","", wdpath), "ArabBarometer_WaveVIII_English_v1/ArabBarometer_WaveVIII_English_v1.csv"))
+rio::import(paste0(gsub("palestine$","", wdpath), "ArabBarometer_WaveVIII_English_v2/ArabBarometer_WaveVIII_English_v3.csv"))
 
 #Previsualizar base de datos
 glimpse(arabebarometro, width = 40) 
@@ -193,7 +190,7 @@ Eliminamos casos con IDs inválidos (n= 2.400) y que tengan  al menos 2 perdidos
 #| label: "seleccion_bd"
 
 #para explorar variables de interés
-#arabebarometro %>% dplyr::filter(rowSums(!is.na(select(., paste0("QKUW40_", c(1:5, 90, 97, 98, 99))))) > 0) |> 
+#arabebarometro %>% dplyr::filter(rowSums(!is.na(select(., paste0("QKUW40_", c(1:5, 90, 97, 98, 99))))) > 0) |> glimpse()
 
 arabebarometro_selected<-
 arabebarometro |> 
@@ -433,6 +430,11 @@ grid.arrange(
 )
 ```
 
+::: {.notes}
+`r invisible("#_#_#_#_#_#_#_#_#_#_#_#_#_#_#_#_#")`
+
+- Walter Weldon, biometrista británico, le preguntó a Pearson analizando mediciones de cangrejos, que las mediciones de diámetro de caparazón, etc., no distribuían de acuerdo a la "ley normal", ya que existían dos curvas. Gracias a Pearson, weldon descompuso la distribución en dos componentes normales, conforme al pensamiento de Galton de que las distribuciones eran o normales o MIXTURAS de normales. En un principio pensó que midió a especies distintas. (Madrid-Casado, 2014)
+:::
 
 ### Utilidad
 
@@ -662,7 +664,7 @@ Abra el siguiente [**enlace al TALLER**](taller_aplicacion_lca.html)
 <div style="font-size: 50%;">
 ```{r session_info, echo=T, paged.print=TRUE}
 #guardamos la información generada
-save.image("_data/palestine.RData")
+save.image("_data/palestine_25.RData")
 #vemos desde donde se producen las librerías
 Sys.getenv("R_LIBS_USER")
 #ponemos información de la sesión: Sistema operativo, paquetes, idisioncracias, etc.
@@ -692,4 +694,7 @@ sessionInfo()
 - Suffoletto, B., & Chung, T. (2016). Patterns of Change in Weekend Drinking Cognitions Among Non-Treatment-Seeking Young Adults During Exposure to a 12-Week Text Message Intervention. Journal of Studies on Alcohol and Drugs, 77(6), 914-923. https://doi.org/10.15288/jsad.2016.77.914
 - Weller, B. E., Bowen, N. K., & Faubert, S. J. (2020). Latent Class Analysis: A Guide to Best Practice. Journal of Black Psychology, 46(4), 287-311.
 - Zhang, Z., Abarda, A., Contractor, A., Wang, J., & Dayton, C. (2018). Exploring heterogeneity in clinical trials with latent class analysis. Annals of Translational Medicine, 6(7). https://doi.org/10.21037/18822
+- R. Weldon, W. F. "On Certain Correlated Variations in Carcinus Maenas on JSTOR." Proceedings of the Royal Society of London, 318. Accessed April 8, 2025. https://doi.org/115537.
+- Madrid Casado, C. M. (2014). Fisher, la inferencia estadística: probablemente sí, probablemente no. Barcelona: RBA.
+
 </div>
