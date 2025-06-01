@@ -1,6 +1,6 @@
 ---
 title: "Workshops por palestina"
-subtitle: "Defendiendo la Justicia y los Derechos Humanos"
+subtitle: "Buscando aportar con recursos como respuesta a acciones genocidas"
 format: html
 header-includes:
   - '<div style="text-align: center;"><img src="https://raw.githubusercontent.com/AGSCL/Workshops-por-palestina/refs/heads/master/_style/banner.svg" alt="Free Palestine" style="width:75%; max-width: 200px;"></div>'
@@ -24,7 +24,7 @@ Si quieres donar simplemente, puedes ver este video sobre cómo hacerlo:
 
 # Workshops disponibles
 
-## XX al XX de Enero, 2025  
+## XX al XX de XXXX, 2025  
 **Introducción al análisis de clases latentes a través del Barómetro Árabe (ola 8):**  
 _'¿De cuál de las siguientes maneras, si es que hay alguna, te has solidarizado con Gaza?'_
 
