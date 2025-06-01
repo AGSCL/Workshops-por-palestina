@@ -59,7 +59,7 @@ pacman::p_unlock(lib.loc = .libPaths()) #para no tener problemas reinstalando pa
 
 #obliga a desplegarlo en la versión de R 4.4.0
 if(Sys.info()["sysname"]=="Windows"){
-if (getRversion() != "4.4.0") { stop("Requiere versión de R 4.4.0. Actual: ", getRversion()) }
+if (getRversion() != "4.4.1") { stop("Requiere versión de R 4.4.1. Actual: ", getRversion()) }
 }
 
 # Cargar o instalar paquetes necesarios
@@ -218,7 +218,9 @@ lca09 <- glca(f_lca, data = arabebarometro_selected[,paste0("QKUW40_", c(1:5, 90
 lca10 <- glca(f_lca, data = arabebarometro_selected[,paste0("QKUW40_", c(1:5, 90, 97, 98, 99))], nclass= 10, seed= seed, verbose= verbose, n.init= init, decreasing=T, maxiter=1e4, testiter = testiter)
 
 new_med<-(Sys.time())
-paste0("El modelo tomó ",round(new_med-old,2),"segundos hasta que todos los análisis fueron computados")
+duración <- as.numeric(difftime(new_med, old, units = "mins"))
+
+paste0("El modelo tomó ",round(duración,2)," minutos hasta que todos los análisis fueron computados")
 ```
 
 ```{r}
@@ -249,8 +251,23 @@ max_classes<- nrow(gof$gtable)+1
 #para obtener índice BLRT= Evaluar si el modelo k presenta mejor ajuste que el k-1
 
 #número de iteraciones para bootstrap, se recomienda 5e2
-nboot= 10
-bootlrt<- gofglca(lca02, lca03, lca04, lca05, lca06, lca07, lca08, lca09, lca10, test = "boot", nboot= nboot, seed=2125)
+
+if (interactive()) {
+  message("Estamos en una sesión interactiva.")
+  nboot= 10 # cómo estamos haciendo el ejercicio, ejecuta menos iteraciones
+} else {
+  nboot= 250 # si no está interactuando, ejecuta más iteraciones
+  }
+
+bootlrt <- tryCatch(
+  gofglca(lca02, lca03, lca04, lca05, lca06, lca07, lca08, lca09, lca10, test = "boot", nboot = nboot, seed = 2125),
+  error = function(e) {
+    message("Error con 9 modelos, se ejecuta la versión con 5 modelos (lca02 a lca06)")
+    gofglca(lca02, lca03, lca04, lca05, lca06, test = "boot", nboot = nboot, seed = 2125)
+  }
+)
+# Error en if (maxdiff < eps) {: 
+#   valor ausente donde TRUE/FALSE es necesario
 
 manualcolors <- rev(c('gray20', 'gray50', 'gray80')) # Tres colores en escala de grises
 manual_linetypes <- rev(c('solid', 'dashed', 'dotted')) # Tres estilos de línea
@@ -298,9 +315,17 @@ Vemos un resumen de la salida del modelo con mejores índices de ajuste BIC.
 #| paged.print: true
 #| label: "explorar-clasificacion"
 
-#combinamos
-cbind.data.frame(rn=2:max_classes,gof$gtable, blrt= bootlrt$gtable[, "Boot p-value"]) %>%#
-  dplyr::mutate(blrt= ifelse(as.numeric(blrt)<.001, "<0.001",sprintf("%1.3f",blrt))) %>% 
+#combinamos los índices de ajuste con el índice BLRT
+#algunas veces podemos tener problemas de convergencia por tanto no llegar a un cómputo adecuado
+#es por eso que utilizamos esta sintaxis para sortear ese problema
+merge(2:max_classes, bootlrt$gtable[,"Boot p-value"], by="row.names", all=TRUE)%>%
+  {
+    colnames(.)<- c("row number", "rn", "blrt")
+    .
+  }%>%
+  select(-`row number`)%>%
+  cbind.data.frame(gof$gtable)%>%
+    dplyr::mutate(blrt= ifelse(as.numeric(blrt)<.001, "<0.001",sprintf("%1.3f",blrt))) %>% 
   dplyr::select(rn, everything()) %>% 
   dplyr::rename("N de clases"="rn")%>%
   dplyr::mutate(across(c("logLik","AIC","CAIC", "BIC", "entropy", "Gsq"),~sprintf("%1.2f",.)))%>%
@@ -311,6 +336,8 @@ cbind.data.frame(rn=2:max_classes,gof$gtable, blrt= bootlrt$gtable[, "Boot p-val
 mejor_modelo<-
 as.numeric(cbind.data.frame(rn=2:max_classes,gof$gtable) %>% dplyr::summarise(which.min(BIC)+1))
 ```
+
+Si vemos índices BLRT con valores NA es porque tuvieron problemas de convergencia.
 
 <div class="scrollable-content">
 ```{r}
@@ -664,6 +691,8 @@ chisq.posthoc.test(table(arabebarometro_selected$Q1002[!is.na(posterior_glca_07$
 ```
 
 ## Modelo con covariable
+
+Ahora predecimos la pertenencia a una clase latente basados en el valor de Sexo `Q1002` y Ocupación `Q1005` (ver tabla de variables), recodificando entre población activa o no activa económicamente.
 
 ```{r}
 #| label: regresion-clases

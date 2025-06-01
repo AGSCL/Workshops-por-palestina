@@ -139,6 +139,7 @@ o consultartle. De la misma forma, es necesario que tenga en cuenta mi formació
 
 #Si no, puede importarlos desde (ventana interactiva)
 #arabebarometro<- rio::import(choose.files())
+wdpath <- getwd()
 arabebarometro<-
 rio::import(paste0(gsub("palestine$","", wdpath), "ArabBarometer_WaveVIII_English_v2/ArabBarometer_WaveVIII_English_v3.csv"))
 
@@ -565,23 +566,40 @@ cropped_img
 
 - En el ejemplo, **poLCA** requiere variables politómicas, se pueden convertir las variables continuas (siempre con el riesgo de introducir sesgo; por ej., un día por distribuciones de semanas de embarazo, dividí en 25% los valores y los clasifiqué, pero sin reconocer el problema y la naturaleza. Luego hable con una matrona, y me proporcionó una clasificación mucho mejor de las semanas [21-25 de gestación, por ej.] )
 
+- El algoritmo expectation-maximization (EM), si bien sirve cuando no converge la función de máxima verosimilitud (MLE), no son la MLE, porque la verosimilitud tiene una máxima local, por tanto si es una máxima local, las estimaciones producidas por el algoritmo de optimización dependen del punto de partida. Por tanto, el mismo ajuste
+mediante distintos softwares podría producir distintos resultados.
+- Para eso, se prueban muchos puntos de partida, y se seleccionan los resultados con la mayor verosimilitud. Para asegurarse que la máxima global verdadera está respondida, se pruebal muchos miles de valores iniciales. (Cislo et al 2021)
+
 :::
 
 ## Aplicación (1)
 
 - Muestra requerida (Nylund-Gibson & Choi, 2018; Weller et al., 2020)
 
-- Clases pequeñas (<5%), poco replicables (Herle et al., 2020)
+- Clases pequeñas, inestables (<5%), poco replicables (Herle et al., 2020; Wolf, 2025)
+
+- Variables manifiestas, categorías de respuesta e identificación
+
+- Criterios de ajuste: BIC $arg\,min_M\,C(M)$, razón de verosimilitud $p<.05$, Entropía relativa $[0,1)$
+
 
 ::: {.notes}
 `r invisible("#_#_#_#_#_#_#_#_#_#_#_#_#_#_#_#_#")`
 - 300>= Nylund-Gibson and Choi (2018)
-- Indicadores, más mejor, 4-20, depende
 - Un heurístico de N>= 500 se ha sugerido (https://doi.org/10.1037/met0000486)
 - Parece que entre N ~~300-1000 es el rango para funcionar bien
+- Indicadores, más mejor, 4-20, depende
 - O muestras dependiendo de los parámetros a estimar. Algunos dicen, por cada parámetro libre, 5 observaciones; otros, 20.
+- 3 clases con una con 10% de la muestra; 2 con una con <15% muestra (Sinha 2019)
+- Si la base es muy grande, podemos considerarlo (ej., <5%) (wolf et al)
 - #parametros libres= (clases latentes - 1)+ (parámetros condicionales= sumar de 1 a m[var manifiestas]* (clases x (categorías/cada una -1)) )
 $$(k-1)+ (\,\,\sum_{i=1}^{m}(k\times(c_i-1))\,\,)$$
+
+- Tenemos información suficiente para estimar las clases latentes que postulamos? (ej., tenemos 3 variables manifiestas con 2 opciones de respuesta cada una y planeamos estimar 9 clases latentes. La combinatoria no da...). Un modelo  sobreidentificado es aquel que tneemos grados de libertad positivos para evaluar qué tan bien encaja el modelo y compararlo. Algunas opciones radican en fijar parámetros, agregar indicadores, o reducir el número de clases.
+Por ejemplo, si tenemos 3 incógnitas y 2 ecuaciones, puedo estimar los valores de x, y, z que satisfagan las dos ecuaciones, pero si cambio algo de z  y ajustar x e y para que las ecuaciones sigan siendo válidas.
+x+y+z=10,
+2x−y+3z=5.
+- Por tanto, no hay una única configuración porque faltan ecuaciones, por lo que hay muchas soluciones que encajan igual con los datos.
 
 - π (pi): Probabilidades de clase latente - proporción de individuos en cada clase
 - ρ (rho): Probabilidades condicionales de respuesta - probabilidad de cada respuesta dado que pertenece a una clase
@@ -589,17 +607,119 @@ $$(k-1)+ (\,\,\sum_{i=1}^{m}(k\times(c_i-1))\,\,)$$
 
 
 **Ajuste**
-- BIC: confiable y debe ser reportado
-- Probabilidades posteriores promedio >.7 indican clases bien separadas (Nagin, 2005)
+- BIC [k*ln(n)−2ln(L^)] [a más parámetros y a mayor tamaño de muestra, más se penaliza la complejidad]: confiable y debe ser reportado. N<300, incluir el criterio de Akaike [AIC=2k−2ln(L^)] [2k= más complejo (2 x npar); -2ln(L^)= menor ajuste, - menos max verosimilitud ]
 - Elementos fuera de la diagonal en la matriz de probabildiades posteriores. 0,8 o 0,9 o más
-- Entropía: la absoluta es poco interpretable. cuán certero es el modelo definiendo clases. >0,6 aceptable, o >0,8 bueno, capacidad de clasificación. La entropía suelen disminuir a medida que incrementan las clases (Zhang)
+- Entropía: la absoluta es poco interpretable. cuán certero es el modelo definiendo clases. >0,6 aceptable, o >0,8 bueno, capacidad de clasificación. La entropía suelen disminuir a medida que incrementan las clases (Zhang). Se utiliza la entropía relativ. Primero calculamos cuánta “mezcla de probabilidades” hay en los datos (entropía observada), luego la dividimos por lo peor que podría ser (entropía si todas las probabilidades fueran uniformes), y por último restamos a 1 para que un valor alto signifique “buena clasificación".
+- Probabilidades posteriores promedio >.7 indican clases bien separadas (Nagin, 2005)
+$$
+\frac{1}{N} \sum_{i=1}^{N} P\bigl(C_i = \hat{k}_i \mid \text{datos}_i\bigr) > 0.7,
+$$
+donde \(\hat{k}_i = \arg\max_{1 \le k \le K} P(C_i = k \mid \text{datos}_i)\).
+-Se promedian las probabilidades a posteriori “en la diagonal” (i.e., la probabilidad de la clase asignada) sobre todos los individuos, y si ese promedio supera 0.7, se considera que la separación entre clases es buena.
+
 :::
 
 
 ## Aplicación (2)
 
-- Clasificaciones
+:::: {.columns}
 
+::: {.column width="50%"}
+
+- Ver relación con otras variables
+
+  + Clasificar-analizar
+
+  + 1-step
+
+  + 3-step
+
+:::
+
+::: {.column width="50%"}
+
+```{r}
+#| echo: true
+#| include: true
+#| code-fold: true
+#| fig-align: "center"
+#| code-summary: "expandir para código"
+#| warnings: false
+#| message: false
+#| label: "ej-clasificaciones-exp"
+#| out.height: "100%"
+#| fig.show: "hold"
+set.seed(2025)
+n_individuos <- 10
+clases <- paste0("Clase_", 1:3)
+
+# Generar probabilidades aleatorias que suman 1 por individuo
+prob_mat <- t(apply(matrix(runif(n_individuos * length(clases)), 
+                           ncol = length(clases)), 1, function(x) x / sum(x)))
+df_probs <- as_tibble(prob_mat) %>%
+  set_names(clases) %>%
+  mutate(ID = paste0("Obs ", sprintf("%02.0f",seq_len(n_individuos)))) %>%
+  # Determinar clase dura: la que tiene probabilidad máxima
+  rowwise() %>%
+  mutate(
+    Clase_dura = clases[which.max(c_across(all_of(clases)))]
+  ) %>%
+  ungroup()
+
+# 2. Pasar a formato 'long' para ggplot
+df_long <- df_probs %>%
+  select(ID, all_of(clases), Clase_dura) %>%
+  pivot_longer(cols = all_of(clases), 
+               names_to = "Clase", 
+               values_to = "Prob") %>%
+  # Para ordenar las barras de arriba hacia abajo (opcional)
+  mutate(ID = factor(ID, levels = paste0("Obs ", sprintf("%02.0f",seq_len(n_individuos)))))
+
+# 3. Dibujar el gráfico
+ggplot(df_long, aes(x = ID, y = Prob, fill = Clase)) +
+  geom_col(width = 0.8) +
+  # Superponer un contorno en la porción de máxima probabilidad
+  geom_point(
+    data = df_probs %>% 
+      select(ID, Clase_dura) %>%
+      left_join(
+        df_long %>% 
+          filter(Clase == Clase_dura) %>%
+          group_by(ID) %>%
+          summarize(y_max = Prob), 
+        by = "ID"
+      ),
+    aes(x = ID, y = y_max),
+    shape = 21, color = "black", fill = NA, size = 4, stroke = 1.2
+  ) +
+  coord_flip() + 
+  scale_fill_manual(
+    values = c(
+      "Clase_1" = "#E8F5E9",  # pastel verde (inspirado en el verde palestino pero aclarado)
+      "Clase_2" = "#FDE0DC",  # pastel rojo (inspirado en el rojo palestino pero aclarado)
+      "Clase_3" = "#E0E0E0"   # pastel negro (gris claro)
+      #       "Clase_1" = "#E8F5E9",  # pastel verde
+      # "Clase_2" = "#FDE0DC",  # pastel rojo
+      # "Clase_3" = "#E0E0E0"   # gris claro
+    ),
+    labels = c("Clase 1", "Clase 2", "Clase 3")
+  ) +
+  labs(
+    subtitle = "Barras apiladas: probabilidades posteriores por Obs./\nPunto: clase asignada (mayor probabilidad)",
+    x = NULL, y = "Probabilidad posterior",
+    fill = "Clase"
+  ) +
+  theme_minimal(base_size = 12) +
+  theme(
+    legend.position = "bottom",
+    plot.title = element_text(face = "bold", size = 14),
+    plot.subtitle = element_text(size = 11)
+  )
+```
+
+:::
+
+::::
 
 ::: {.notes}
 `r invisible("#_#_#_#_#_#_#_#_#_#_#_#_#_#_#_#_#")`
@@ -607,8 +727,20 @@ $$(k-1)+ (\,\,\sum_{i=1}^{m}(k\times(c_i-1))\,\,)$$
 - Clasificación dura= obs. en la clase a la que tienen más alta probabilidad de pertenecer
 - la clasificación dura no considera la incertidumbre propia de la clasificación 
 - lasificación dura (Hard-classification) a clases basados en la probabilidad posterior máxima es utilizada para describir las características y predictores más probables de las clases (Nagin 2005). Notar que este método asume un grado de incertidumbre, por lo que las clases identificadas es probabilístico más que real
+- Las clases son reificadas como predictores de otros resultados de interés, tratando a la clase más común como la verdadera clase a la que pertenece el individuo aunque haya incertidumbre en la pertenencia a una clase, la que puede verse como una forma de error de medición en los predictores. El más común es el de dos etapas que trata un modelo de 2 etapas que trata a la predicción modal como la verdadera (Elliott et al 2020)
+- - "assigning latent classes based on modal posterior probability of membership and treating them as fixed and known"
 
+- Classify-analyze= Zhang, Z., Abarda, A., Contractor, A. A., Wang, J., & Dayton, C. M. (2018)
+1. **Clasificar:** Se calcula la probabilidad posterior de cada paciente y se le asigna a la clase latente en la que tenga la mayor probabilidad.
+2. **Analizar:** Se usa un modelo de regresión logística para analizar, incluyendo como variables la pertenencia a la clase latente, el tratamiento, y su interacción con el resultado que se quiere estudiar.
+
+
+-  Si la entropía es >0.80, los resultados no variarán mucho entre los tipos de relaciones con otras variables. Eso denota una buena separación (también ver el tipo de clasificación que se utiliza para decir que una observación depende de una clase). A veces es 0,7 a veces es la moda, a veces es 0,5.
+- In such circumstances, the loss of information introduced by this “classify-analyze” approach will be minimal (Sinha et al 2021)
 :::
+
+
+## Taller
 
 Abra el siguiente [**enlace al TALLER**](taller_aplicacion_lca.html)
 
@@ -619,7 +751,7 @@ Abra el siguiente [**enlace al TALLER**](taller_aplicacion_lca.html)
 
 - Si no, razones para haber generado un modelo exploratorio
 
-- Características de los datos (descriptivos, datos perdidos)
+- Características de los datos (descriptivos, datos perdidos) // patrones "salsa"
 
 - Paquete estadístico y versión
 
@@ -635,29 +767,72 @@ Abra el siguiente [**enlace al TALLER**](taller_aplicacion_lca.html)
 
 <div style="text-align: center; font-size: small; font-style: italic;"> Adaptado de: <a href="https://journals.sagepub.com/doi/full/10.1177/0095798420930932" target="_blank">Weller et al, 2020</a> </div>
 
+::: {.notes}
+
+- Cuidado con las **clasificaciones** tipo "sinsabor, algo picante, muy picante", que reflejan gradientes de puntajes interpretados como categóricos, porque deriva en que tratemos las variables manifiestas por grados. Esto sugiere que el modelo elegido no es el mejor para los datos [Vaya a la tabla del principio] (Wolf et al)
+- En los plots tienden a verse probabilidades de respuesta paralelas para cada ítem, sólo diferenciando su intensidad de respuesta. Eso prende alarmas.
+-Cuidado con el **supuesto de Independencia Local** (Sinha et al 2019): las variables son independientes unas de otras al interior de una clase latente. Muchas veces esto mismo genera el problema de arriba, en que sólo se pueden ver diferencias porque todos los item "cargan" pal mismo lado, sólo que unos sujetos más y otros menos.
+
+- **Validez**= A veces en dos mitades (una base de exploración y otra de testeo para confirmar si el modelo sigue teniendo buen ajuste). Si se utiliza para predecir desenlaces por ejemplo, utilizar métricas apropiadas para evaluar la capacidad predictiva (el R2 es insuficiente, porque no es un modelo lineal) (Wolf et al)
+
+:::
+
 ## Extensiones
 
-- Ver relación con otras variables
-  + Clasificar-analizar
-  + 1-step
-  + 3-step
-
 - Con datos longitudinales
+
+- Con datos de supervivencia (tiempos de supervivencia heterogéneos; Li, 2019)
 
 - Tener en cuenta efectos aleatorios de las variables por grupos
 
 ::: {.notes}
 `r invisible("#_#_#_#_#_#_#_#_#_#_#_#_#_#_#_#_#")`
-- Classify-analyze= Zhang, Z., Abarda, A., Contractor, A. A., Wang, J., & Dayton, C. M. (2018)
-1. **Clasificar:** Se calcula la probabilidad posterior de cada paciente y se le asigna a la clase latente en la que tenga la mayor probabilidad.
-2. **Analizar:** Se usa un modelo de regresión logística para analizar, incluyendo como variables la pertenencia a la clase latente, el tratamiento, y su interacción con el resultado que se quiere estudiar.
-
-
--  Si la entropía es >0.80, los resultados no variarán mucho entre los tipos de relaciones con otras variables
 
 -**Long**: Puede capturar la heterogeneidad de las medidas repetidas en el tiempo
+- Hay análisis de trayectorias. Se debe asegurar no sólo tener las mismas preguntas, sino que exista invarianza en la medición [funciona igual factorialmente el instrumento?] (Wolf et al)
+
+- Latent Class Growth Analysis, Cada persona queda asignada a la clase cuya curva de crecimiento “predice” mejor su propio perfil de medidas.
 
 :::
+
+## Gracias
+
+<div style="width: 100%; height: 100vh; display: flex; align-items: center; justify-content: center;">
+<div style="text-align: center;">
+  <span style="font-weight: bold; color: #FF0000;">r</span>
+  <span style="font-weight: bold; color: #FFFFFF; text-shadow: -1px -1px 0 #000000, 1px -1px 0 #000000, -1px 1px 0 #000000, 1px 1px 0 #000000;">e</span>
+  <span style="font-weight: bold; color: #008000;">s</span>
+  <span style="font-weight: bold; color: #000000;">i</span>
+  <span style="font-weight: bold; color: #FF0000;">g</span>
+  <span style="font-weight: bold; color: #FFFFFF; text-shadow: -1px -1px 0 #000000, 1px -1px 0 #000000, -1px 1px 0 #000000, 1px 1px 0 #000000;">n</span>
+  <span style="font-weight: bold; color: #008000;">,</span>
+  <span>&nbsp;</span>
+  <span style="font-weight: bold; color: #000000;">r</span>
+  <span style="font-weight: bold; color: #FF0000;">e</span>
+  <span style="font-weight: bold; color: #FFFFFF; text-shadow: -1px -1px 0 #000000, 1px -1px 0 #000000, -1px 1px 0 #000000, 1px 1px 0 #000000;">f</span>
+  <span style="font-weight: bold; color: #008000;">u</span>
+  <span style="font-weight: bold; color: #000000;">s</span>
+  <span style="font-weight: bold; color: #FF0000;">e</span>
+  <span style="font-weight: bold; color: #FFFFFF; text-shadow: -1px -1px 0 #000000, 1px -1px 0 #000000, -1px 1px 0 #000000, 1px 1px 0 #000000;">,</span>
+  <span>&nbsp;</span>
+  <span style="font-weight: bold; color: #008000;">r</span>
+  <span style="font-weight: bold; color: #000000;">e</span>
+  <span style="font-weight: bold; color: #FF0000;">d</span>
+  <span style="font-weight: bold; color: #FFFFFF; text-shadow: -1px -1px 0 #000000, 1px -1px 0 #000000, -1px 1px 0 #000000, 1px 1px 0 #000000;">i</span>
+  <span style="font-weight: bold; color: #008000;">r</span>
+  <span style="font-weight: bold; color: #000000;">e</span>
+  <span style="font-weight: bold; color: #FF0000;">c</span>
+  <span style="font-weight: bold; color: #FFFFFF; text-shadow: -1px -1px 0 #000000, 1px -1px 0 #000000, -1px 1px 0 #000000, 1px 1px 0 #000000;">t</span>
+  <span style="font-weight: bold; color: #008000;">!</span>
+  <span style="font-weight: bold; color: #000000;">!</span>
+</div>
+</div>
+
+::: {.notes}
+“Renuncia a tu complicidad, rechaza la violencia estructural, y redirige tu energía hacia la justicia.”
+
+:::
+
 
 ## Información de la sesión
 
@@ -696,5 +871,8 @@ sessionInfo()
 - Zhang, Z., Abarda, A., Contractor, A., Wang, J., & Dayton, C. (2018). Exploring heterogeneity in clinical trials with latent class analysis. Annals of Translational Medicine, 6(7). https://doi.org/10.21037/18822
 - R. Weldon, W. F. "On Certain Correlated Variations in Carcinus Maenas on JSTOR." Proceedings of the Royal Society of London, 318. Accessed April 8, 2025. https://doi.org/115537.
 - Madrid Casado, C. M. (2014). Fisher, la inferencia estadística: probablemente sí, probablemente no. Barcelona: RBA.
-
+- Wolf, E. J., et al. (2025). What is latent about trauma exposure? Commentary on the use of latent class analysis for identifying trauma subtypes. Journal of Mood & Anxiety Disorders, 0(0), 100130. DOI: 10.1016/j.xjmad.2025.100130
+- Cislo, P. R., Emir, B., Cabrera, J., Li, B., &amp; Alemayehu, D. (2021). Finite Mixture Models, a Flexible Alternative to Standard Modeling Techniques for Extrapolated Mean Survival Times Needed for Cost-Effectiveness Analyses. In Value in Health (Vol. 24, 11, pp. 1643–1650). Elsevier BV. https://doi.org/10.1016/j.jval.2021.05.012
+- Li, B. Y. (2019). Finite mixture models in survival data analysis (Doctoral dissertation, Rutgers, The State University of New Jersey). Retrieved from https://rucore.libraries.rutgers.edu/rutgers-lib/61793/PDF/1/play/
+- Elliott, M. R., Zhao, Z., Mukherjee, B., Kanaya, A., & Needham, B. L. (2020). Methods to Account for Uncertainty in Latent Class Assignments When Using Latent Classes as Predictors in Regression Models, with Application to Acculturation Strategy Measures. Epidemiology (Cambridge, Mass.), 31(2), 194–204. https://doi.org/10.1097/EDE.0000000000001139
 </div>
