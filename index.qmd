@@ -29,7 +29,7 @@ Si quieres donar simplemente, puedes ver este video sobre cómo hacerlo:
 _'¿De cuál de las siguientes maneras, si es que hay alguna, te has solidarizado con Gaza?'_
 
 <div style="display: flex; align-items: center; gap: 15px; margin-top: 20px;">
-  <img src="https://github.com/AGSCL/Workshops-por-palestina/blob/5a7cf89c9c2da81981c532ede70ef52c03960ca5/_figs/CURSO-COMPUTACION-ALONSO.jpg" alt="Foto de instructor" style="width: 150px; height: auto; filter: grayscale(100%); border-radius: 5px;">
+  <img src="https://raw.githubusercontent.com/AGSCL/Workshops-por-palestina/master/_figs/CURSO-COMPUTACION-ALONSO.jpg" alt="Foto de instructor" style="width: 150px; height: auto; filter: grayscale(100%); border-radius: 5px;">
   <p style="color: #4a4a4a; font-size: 16px; line-height: 1.6;">
     Este taller está pensado para introducir a l@s participantes en el uso de métodos aplicados de análisis de clases latentes, utilizando datos del Barómetro Árabe para explorar patrones de solidaridad hacia Gaza. ([**PRESENTACIÓN**](tallerlca.html)).
   </p>
