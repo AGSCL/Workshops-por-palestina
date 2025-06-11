@@ -456,9 +456,11 @@ Buscamos estimar los parámetros del modelo que describen estas clases latentes,
 - Las probabilidades de pertenecer a cada clase.
 - Las distribuciones esperadas (prob. respuesta, por ej.) de las variables observadas dentro de cada clase.
 
-- Pueden usarse como una técnica dirigida por los datos, como de tener fundamentos teóricos para utilizarlos. Centrado en las personas u observaciones //Análisis factorial o PCA, por ej., se centra en los ítems (vertical), en reducir la dimensionalidad
-- A diferencia de cluster, por ejemplo, se asume que las clases **existen** y son parte del proceso por el cual se generan los datos.
+- Pueden usarse como una técnica dirigida por los datos, como de tener fundamentos teóricos para utilizarlos. Centrado en las personas u observaciones //Análisis factorial o PCA, por ej., se centra en los ítems (vertical) [variable-centered], en reducir la dimensionalidad
+- A diferencia de cluster, por ejemplo, se asume que las clases **existen** y son parte del proceso por el cual se generan los datos. Es más parsimoniosa y por tanto mejor para muestras pequeñas (Van Lissa et al., 2023)
 -  Permite manejar datos perdidos (cuando no todos son perdidos), maneja variables de múltiples tipos
+
+- Se ha usado como un término paraguas para muchos modelos con variables o medidas no observadas a través de indicadores. También se confunde con LCA con indicadores ordinales (Van Lissa et al., 2023)
 
 **Supuestos**:
 - Mezcla de distribuciones: Las respuestas observadas se explican como una combinación ponderada de distribuciones específicas de cada clase latente.
@@ -737,6 +739,14 @@ ggplot(df_long, aes(x = ID, y = Prob, fill = Clase)) +
 
 -  Si la entropía es >0.80, los resultados no variarán mucho entre los tipos de relaciones con otras variables. Eso denota una buena separación (también ver el tipo de clasificación que se utiliza para decir que una observación depende de una clase). A veces es 0,7 a veces es la moda, a veces es 0,5.
 - In such circumstances, the loss of information introduced by this “classify-analyze” approach will be minimal (Sinha et al 2021)
+
+- some guidelines have suggested that values on the diagonal should exceed 0.7 (Masyn, 2013). These guidelines should not be considered as strict cutoffs; rather, classification quality should be interpreted substantive (Van Lissa et al., 2023)
+
+- Researchers often wish to relate class membership to auxiliary variables, or even auxiliary models. It is important to keep in mind that most likely class membership M is subject to classification error (Vermunt, 2010a). Treating class membership as an observed variable disregards this error, resulting in biased models, except when class separation is very high. It is therefore important to account for classification error in follow-up analyses. The BCH method, available via BCH(), compares auxiliary variables or arbitrary auxiliary models across classes while accounting for classification error (Bolck et al., 2004). 
+- The current study proposes a step-by-step approach for using inverse propensity score weighting together with the “Bolck, Croon, and Hagenaars” approach to LCA with distal outcomes (i.e., the BCH approach)
+
+- naming fallacy/falacia etiquetado= nombres muy simples pueden confundir (Weller et al., 2020; Van Lissa et al., 2023)
+
 :::
 
 
@@ -775,6 +785,8 @@ Abra el siguiente [**enlace al TALLER**](taller_aplicacion_lca.html)
 
 - **Validez**= A veces en dos mitades (una base de exploración y otra de testeo para confirmar si el modelo sigue teniendo buen ajuste). Si se utiliza para predecir desenlaces por ejemplo, utilizar métricas apropiadas para evaluar la capacidad predictiva (el R2 es insuficiente, porque no es un modelo lineal) (Wolf et al)
 
+- Para asegurarse que el orden de las clases se conservan, se generan una semilla (Van Lissa et al., 2023).
+
 :::
 
 ## Extensiones
@@ -791,7 +803,9 @@ Abra el siguiente [**enlace al TALLER**](taller_aplicacion_lca.html)
 -**Long**: Puede capturar la heterogeneidad de las medidas repetidas en el tiempo
 - Hay análisis de trayectorias. Se debe asegurar no sólo tener las mismas preguntas, sino que exista invarianza en la medición [funciona igual factorialmente el instrumento?] (Wolf et al)
 
-- Latent Class Growth Analysis, Cada persona queda asignada a la clase cuya curva de crecimiento “predice” mejor su propio perfil de medidas.
+- Latent Class Growth Analysis(LCGA), Cada persona queda asignada a la clase cuya curva de crecimiento “predice” mejor su propio perfil de medidas.
+
+- LCGA differs from GMM in that it assumes within-class homogeneity of trajectories, restricting the (co)variances to zero. Another longitudinal extension of LCA is the **Hidden Markov** Model or Latent Transition Analysis, which estimates an LCA at each time point and models the probabilities of transitioning from one class to another (Vermunt, 2010b). 
 
 :::
 
@@ -875,4 +889,5 @@ sessionInfo()
 - Cislo, P. R., Emir, B., Cabrera, J., Li, B., &amp; Alemayehu, D. (2021). Finite Mixture Models, a Flexible Alternative to Standard Modeling Techniques for Extrapolated Mean Survival Times Needed for Cost-Effectiveness Analyses. In Value in Health (Vol. 24, 11, pp. 1643–1650). Elsevier BV. https://doi.org/10.1016/j.jval.2021.05.012
 - Li, B. Y. (2019). Finite mixture models in survival data analysis (Doctoral dissertation, Rutgers, The State University of New Jersey). Retrieved from https://rucore.libraries.rutgers.edu/rutgers-lib/61793/PDF/1/play/
 - Elliott, M. R., Zhao, Z., Mukherjee, B., Kanaya, A., & Needham, B. L. (2020). Methods to Account for Uncertainty in Latent Class Assignments When Using Latent Classes as Predictors in Regression Models, with Application to Acculturation Strategy Measures. Epidemiology (Cambridge, Mass.), 31(2), 194–204. https://doi.org/10.1097/EDE.0000000000001139
+. Van Lissa, C. J., Garnier-Villarreal, M., & Anadria, D. (2023). Recommended Practices in Latent Class Analysis Using the Open-Source R-Package tidySEM. Structural Equation Modeling: A Multidisciplinary Journal, 31(3), 526–534. https://doi.org/10.1080/10705511.2023.2250920
 </div>
