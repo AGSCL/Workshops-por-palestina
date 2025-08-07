@@ -259,7 +259,7 @@ knitr::include_graphics("_figs/advertencias.jpg")
   
   - **y un montón de cosas que se resuelven leyendo en internet.**
   
-  - Ver el siguiente [ENLACE](proyecto.html)
+  - Ver el siguiente [ENLACE](https://agscl.github.io/Workshops-por-palestina/proyecto.html.html)
 
 - **Instalar R**: [ENLACE](https://cran.r-project.org/)  
 
@@ -321,7 +321,7 @@ knitr::include_graphics("./_figs/rproj.png")
 knitr::include_graphics("./_figs/guardar_load_rdata.png")
 ```
 
-- **.R:** Archivo de texto plano para guardar comandos, anotaciones, etc. Similar a un archivo `.do` o sintaxis. Se recomienda guardar scripts antes de cerrar la sesión. **.Rdata no es lo mismo que .R, RECUÉRDELO**.
+- **.R:** Guión. Archivo de texto plano para guardar comandos, anotaciones, etc. Como un archivo `.do`/sintaxis. Guarde sus scripts antes de cerrar la sesión. **.Rdata != .R, RECUÉRDELO**.
 :::
 
 :::
@@ -364,6 +364,58 @@ PROYECTOS:
 - Carpetas: data, figs, output, style (ahí deberían ir los .css y todo lo que tiene relación con los temas, pero también van las fuentes de letra, etc.)
 - Tips: cuidado con dejar las carpetas en una subcarpeta OneDrive o coordinada con la nube porque eso podría generar problemas de sincronización
 :::
+
+## Aprenda R en R
+
+
+- R es un lenguaje de programación, por lo que se puede aprender a programar en R.
+
+- **Swirl** es un paquete que permite aprender R desde R, con ejercicios interactivos y prácticos.
+
+::: {.columns}
+
+::: {.column width="50%"}
+
+- Còdigo adaptado de José Rosa
+
+```{r, eval=F, echo=T}
+# Instala estos paquetes si no se encuentran instalados: 
+# "devtools", "bitops", "RCurl", "stringi", "httr", "swirl"
+if (!require("devtools")) install.packages("devtools")
+if (!require("bitops"))   install.packages("bitops")
+if (!require("RCurl"))    install.packages("RCurl")
+if (!require("stringi"))  install.packages("stringi")
+if (!require("httr"))     install.packages("httr")
+if (!require("swirl"))    install.packages("swirl")
+#Activamos los paquetes
+library(devtools)
+library(bitops)
+library(RCurl)
+library(httr)
+library(swirl)
+
+set_config(config(ssl_verifypeer = 0L))
+#Ve si existe una carpetcon el curso instalado. Si no, la instala
+if (file.exists("/opt/R/home/library/swirl/Courses/Programando_en_R")) {
+  uninstall_course("Programando_en_R")
+}
+# Instala el curso de Programando en R desde GitHub
+install_course_github('josersosa','Programando_en_R')
+select_language(language = "spanish")
+# Empezamos con SWIRL
+swirl()
+```
+
+:::
+
+::: {.column width="50%"}
+
+Puede hacerlo en [Google Colab](https://colab.research.google.com/drive/13zlkZP78a-trEanJ7Dh1Xpz3pHAaPJeo?usp=sharing)
+
+:::
+
+:::
+
 
 
 ## Ejercicio
