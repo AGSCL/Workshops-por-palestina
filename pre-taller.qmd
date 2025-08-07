@@ -1,0 +1,759 @@
+---
+title: "Introducción al análisis de clases latentes- Pre-taller"
+date: last-modified
+date-format: "D [d]e MMM, YYYY"
+author: "Andrés González-Santa Cruz"
+subtitle: "¿De cuál de las siguientes maneras, si es que hay alguna, has solidarizado con Gaza?"
+institute: "Estudiante Doctorado en Salud Pública, Investigador joven, nDP"
+editor: source
+format: 
+  revealjs:
+    theme: "mylibs/theme2.scss"
+    transition: slide
+    css: 
+      - mylibs/animate.min.css
+      - mylibs/ninjutsu.css
+      - mylibs/logo.css      
+    width: 1600
+    height: 900      
+    fig-cap-location: top
+    lightbox: auto
+    lang: es
+    slide-number: true
+    incremental: true
+    self-contained: true # Embeds all assets locally
+    navigation-mode: linear # Disable scroll-based navigation
+    logo: "_style/logo-CDSP_gris.png"
+    ratio: 16:9 # Slide aspect ratio    
+    include-after-body: 
+      - mylibs/collapseoutput.js
+      - mylibs/zoom.html
+      - mylibs/timer.html
+    pdf-export: true # Enable PDF export
+    code-fold: true
+    code-summary: "expandir para código"
+    embed-resources: true
+---
+
+## Indice
+
+```{r}
+#| echo: true
+#| include: true
+#| code-fold: true
+#| code-summary: "expandir para código"
+#| fig-align: "center"
+#| warnings: false
+#| message: false
+#| results: hide
+#| label: "setup"
+
+#eliminar archivos previos y limpiar la memoria del entorno
+rm(list=ls());gc()
+
+#Definir el repositorio sobre el que instalar los paquetes desde Chile
+options(repos=structure(c(CRAN="https://cran.dcc.uchile.cl/"))) 
+
+#ver si puede activarse un paquete; si no, lo instala
+#para cambiar la fuente de las letras
+if(!require(showtext)){install.packages("showtext")}
+#para elaborar gráficos
+if(!require(ggplot2)){install.packages("ggplot2")}
+#para elaborar gráficos interactivos
+if(!require(plotly)){install.packages("plotly")}
+#Para separar gráficos
+if(!require(grid)){install.packages("grid")}
+#Para separar gráficos, ampliado
+if(!require(gridExtra)){install.packages("gridExtra")}
+#para mostrar imágenes
+if(!require(magick)){install.packages("magick")}
+#para hacer tablas e interactuar con informes
+if(!require(knitr)){install.packages("knitr")}
+#para manipular bases de datos
+if(!require(tidyverse)){install.packages("tidyverse")}
+#para importar y exportar bases de datos en distintos formatos
+if(!require(rio)){install.packages("rio")}
+#para explorar variables
+if(!require(psych)){install.packages("psych")}
+#para paralelizar los procesos en la CPU
+if(!require(parallel)){install.packages("parallel")}
+#hace lo mismo
+if(!require(doParallel)){install.packages("doParallel")}
+
+#Para llevar a cabo análissi de clases latentes
+if(!require(glca)){install.packages("glca")}
+
+#para generar gráficos esquemáticos
+if(!require(DiagrammeR)){install.packages("DiagrammeR")}
+#para exportar esos gráficos
+if(!require(DiagrammeRsvg)){install.packages("DiagrammeRsvg")}
+#para transformar gráficos en formato .svg
+if(!require(rsvg)){install.packages("rsvg")}
+#para visualizarlos en una presentación
+if(!require(htmlwidgets)){install.packages("htmlwidgets")}
+#permite limpiar bases de datos, entre otras funciones
+if(!require(janitor)){install.packages("janitor")}
+
+# Activar showtext
+#showtext_auto()
+
+# Agregar la fuente Oswald desde Google Fonts
+#font_add_google(name = "Oswald", family = "Oswald")
+```
+
+::: {style="font-size:80%;"}
+
+- **Introducción a R y la investigación reproducible:** 
+  - Software estadístico e investigación
+  - Introducción a R y RStudio: interfaz para programar en R o entorno de desarrollo integrado IDE, ventajas/desventajas 
+  - Instalación
+  - Proyectos en R, configurarlo, guardar conjuntos de datos, lógica de directorio (códigos, referencias, salidas de código, figuras), convenciones y buenas prácticas para guardar y abrir datos.
+  - Recursos en línea
+- **Carga de datos**
+  - Qué es una función y un paquete
+  - Bases de datos (formatos, pro y contras), Estructura de datos (identificar, variables y niveles de medición, valores)
+  - Funciones y usos básicos en R: operadores, objetos, funciones, vectores, data.frames, estructura de funciones y estructuras de control
+
+:::
+
+::: {.notes}
+`r invisible("#_#_#_#_#_#_#_#_#_#_#_#_#_#_#_#_#")`
+- Me presento: mi nombre es Andrés González, soy psicólogo de profesion, estudiante del Doctorado de Salud Pública en la Universidad de Chile
+:::
+
+## Software estadístico e Investigación
+
+- Los software estadísticos son **necesarios** para realizar investigación cuantitativa
+- Reducen considerablemente el **tiempo** que necesitamos para procesar, limpiar y analizar bases de datos
+- No todos los software estadísticos se utilizan para investigación (Ej: Excel, Python)
+- Generalmente se utiliza SPSS, STATA o R
+- Cada software tiene sus ventajas y desventajas dependiendo de la tarea que necesitemos realizar
+
+```{r Fig-Meme1b, message=FALSE, warning=FALSE, cache=T, echo =F, out.width = "450px"}
+knitr::include_graphics("_figs/software_seen_by_others.png")
+```
+
+
+::: {.notes}
+`r invisible("#_#_#_#_#_#_#_#_#_#_#_#_#_#_#_#_#")`
+- Lenguaje de programación desarrollado por estadísticos para estadísticos. 
+- Python es de programación general, en contraste.
+- Gratis y de código abierto (vs. otros paquetes que hay que comprar módulos)
+:::
+
+## R y RStudio
+
+<div style="text-align: center; color: red;">
+**A la hora de elegir qué utilizará, debe considerar estos atributos**
+</div>
+
+::: {.columns}
+
+::: {.column width="50%"}
+
+- Flexible
+- Actualizaciones constantes
+- Fácil automatización e integración 
+- Muchos recursos en-línea y comunidades
+- Útil para ser enseñado a estudiantes
+- Investigación Reproducible
+- **Gratis** - Fuente Abierta
+- Permite ver "tras bambalinas"
+
+```{r Fig-Meme2, message=FALSE, warning=FALSE, cache=T, echo =F, out.width = "450px"}
+knitr::include_graphics("./_figs/consola.png")
+```
+
+:::
+
+::: {.column width="50%"}
+
+- No tan intuitivo
+- No tan confiable 
+- A ratos muy flexible
+- No cuenta con soporte oficial
+- Requiere tiempo 
+
+```{r Fig-Meme12, message=FALSE, warning=FALSE, cache=T, echo =F, out.width = "200px"}
+knitr::include_graphics("https://github.com/AGSCL/Curso_R/raw/master/meme_sintaxis.jpg")
+```
+
+:::
+
+:::
+
+::: {.notes}
+`r invisible("#_#_#_#_#_#_#_#_#_#_#_#_#_#_#_#_#")`
+- Flexibilidad (muchos diseños de datos y muchas funciones), Actualizaciones constantes (nuevos paquetes), de fácil automatización e integración con otras plataformas, software y lenguajes (Google, Excel, SQL, Stata, Python, etc.), muchos recursos en-línea (memes) y comunidades virtuales y presenciales (Rladies, useRchile, etc.), útil para ser enseñado a estudiantes y personas no tan familiarizadas con programación, **gratis**.
+- No tan intuitivo (Difícil aprender sintaxis de R, incorporar lenguaje y lógica detrás), No tan confiable (Paquetes Obsoletos, Erróneos, No Compatibles), a ratos muy flexible (requiere especificar muchos parámetros, argumentos, opciones, etc.), requiere tiempo.
+- Por ejemplo renv, o checkpoint o packrat, permiten tener un control total de los paquetes utilizados y su versión.
+- No te entrega las cajitas con las opciones prefijadas. Permite entender qué hay detrás
+:::
+
+## Ventajas/Desventajas de RStudio
+
+<!-- Definición, supuestos y lugar en familia de modelos, ventajas/limitaciones -->
+
+::: {.columns}
+
+::: {.column width="50%"}
+
+- **Entorno de Desarrollo Integrado para R**
+- Control de versiones
+- Paneles múltiples
+- Permite automatizar algunas funciones de R (Knitr)
+- Fácil Depurador (errores)
+- Eficienta Recursos Computacionales
+- Cuenta con soporte, versiones en servidor y grandes desarrolladores
+
+::: 
+
+::: {.column width="50%"}
+- Algo inestable en determinadas tareas es (Ej. "*Figure margins too large*")
+- Tareas exigentes computacionalmente pueden ser más lentas
+
+:::
+
+:::
+
+::: {.notes}
+`r invisible("#_#_#_#_#_#_#_#_#_#_#_#_#_#_#_#_#")`
+
+Por ejemplo, control de versones con github y svn.
+- Rstudio ventajas: Hay varios shortcuts de teclado, indicadores visuales para comandos, texto predictivo y auto-relleno de paréntesis, etc.
+:::
+
+
+## Ventajas/Desventajas de RStudio (2)
+
+::: {.columns}
+
+::: {.column width="50%"}
+
+```{r Fig-Meme-excel, message=FALSE, warning=FALSE, cache=T, echo =F, out.width = "400px"}
+knitr::include_graphics("_figs/excel_error.jpeg")
+```
+:::
+
+::: {.column width="50%"}
+
+```{r Fig-Memecosa-chata, message=FALSE, warning=FALSE, cache=T, echo =F, out.width = "300px"}
+knitr::include_graphics("_figs/haciendo_graf_excel-ezgif.com-crop.gif")
+```
+```{r Fig-advertencias, message=FALSE, warning=FALSE, cache=T, echo =F, out.width = "300px"}
+knitr::include_graphics("_figs/advertencias.jpg")
+```
+
+:::
+
+:::
+
+## Instalación
+
+- En la página pudieron ver cómo se instalaba R, **¿Alguna duda?**
+
+- Problemas frecuentes:
+  - Microsoft R vs. R, Arquitectura SO (64bits vs. 32bits),
+  
+  - Conectar al servidor de repositorios (firewall, puertas de enlace bloqueadas, permisos de administrador, etc.),
+  
+  - **y un montón de cosas que se resuelven leyendo en internet.**
+  
+  - Ver el siguiente [ENLACE](proyecto.html)
+
+- **Instalar R**: [ENLACE](https://cran.r-project.org/)  
+
+- **Instalar RStudio**: [ENLACE](https://posit.co/download/rstudio-desktop/)
+
+
+## Entorno/Espacio de Trabajo
+
+<img src="_figs/dir_Travolta.gif"
+     style="display:block; margin:0 auto; width:750px;" />
+     
+<ul style="margin-left:0;">
+  <li><div style="color:#B8860B;">Editor de texto o códigos
+        (ACTUALIZACIÓN: Editor Visual Markdown)</div></li>
+  <li><div style="color:green;">Lugar de trabajo (objetos, historial, control de versiones)
+        (ACTUALIZACIÓN: Se agregó Tutorial)</div></li>
+  <li><div style="color:red;">Consola para ejecutar comandos y ver resultados</div></li>
+  <li><div style="color:blue;">Multitabla (gráficos, archivos, paquetes, visor)
+        (ACTUALIZACIÓN: Se agregó “Presentation”)</div></li>
+</ul>
+
+::: {.notes}
+Comentarios:
+- Cntrl+ Shift +H : Paara definir el entorno de trabajo.//Cmd + D: Para cambiar el entorno de trabajo
+- Editor de sintaxis: Formato block de notas, no ejecuta la sintaxis, comentarios se agregan anteponiendo el signo gato, puede predecir comandos, se ejecuta con cntrl+enterp "run"
+- Consola y visor resultados: Con un enter se ejcutarán, cambiarán de color una vez ejecutados, los errores arrojarán mensajes, ejecutar operaciones no es lo mismo que guardarlas, se ejecuta cuando hay un signo ">", no hay un mensaje de stop en la esquina superior derecha.
+- Entorno de trabajo: Memoria interna programa y uso de memoria RAM, entorno de trabajo temporal, objetos almacenados.
+- Visualizador: permite acceder a CRAN, manuales, etc.
+
+- Cuando R está listo para recibir comandos veremos que en la consola aparece el símbolo *>* (llamado _prompt_ en la consola). 
+- Para que R ejecute un comando debemos escribirlo al lado derecho del _prompt_ y apretar la tecla "Enter". Si en lugar del _prompt_ vemos el símbolo `+` significa que el comando entregado no estaba completo. 
+- Un comando puede estar incompleto por distintas razones, aunque en general se debe a que se nos ha olvidado cerrar algún paréntesis en el comando entregado.
+- Si queremos que R ejecute un comando que está en el editor de texto, debemos posicionar el cursor al final del comando y apretar las teclas *Ctrl + Enter¨* (o *Cmd + Enter* en Mac).
+:::
+
+
+## Entorno/Espacio de Trabajo (2)
+
+::: {.columns}
+
+::: {.column width="50%"}
+- Rstudio permite crear un **Proyecto** (.Rproj), agrupa a todos los elementos. Puede gestionarlos aquí:
+
+```{r Fig-rproj, fig.align="center", message=FALSE, warning=FALSE, cache=T, echo =F, out.width = "150px"}
+#, out.width = "250px"
+knitr::include_graphics("./_figs/rproj.png")
+```
+
+- **Directorio:** Ubicación a alojar archivos parte del entorno de trabajo. Se obtiene por `getwd()`. **Configurarlo es muy importante (`setwd([RUTA])`).**
+- **.rds:** Permite guardar bases de datos de manera individual (como un excel, .csv, etc.)
+
+:::
+
+::: {.column width="50%"}
+
+- **.Rdata:** Permite guardar múltiples datos, objetos, funciones, etc., Permite guardar el espacio de trabajo en general (`save.image(file =[RUTA])` para guardar todo; `save` guarda sólo ciertos objetos en un .Rdata, `load([RUTA])` para restaurar). Puede hacerlo también desde aquí:
+
+```{r Fig-save_load_image, fig.align="center", message=FALSE, warning=FALSE, cache=T, echo =F, out.width = "150px"}
+knitr::include_graphics("./_figs/guardar_load_rdata.png")
+```
+
+- **.R:** Archivo de texto plano para guardar comandos, anotaciones, etc. Similar a un archivo `.do` o sintaxis. Se recomienda guardar scripts antes de cerrar la sesión. **.Rdata no es lo mismo que .R, RECUÉRDELO**.
+:::
+
+:::
+
+::: {.notes}
+`r invisible("#_#_#_#_#_#_#_#_#_#_#_#_#_#_#_#_#")`
+PROYECTOS: que agrupa/incorpora los distintos elementos de más abajo. Se recomienda crear uno siempre que se trabaje en un proyecto de investigación nuevo. Además, se recomienda asignarle una carpeta de trabajo individual, que pueda estar respaldada constantemente (ojo: cuidado con Google Drive). 
+
+- Igual uno puede guardar un solo archivo con `save(data_cons, file = "OUT/data3.RData")`
+:::
+
+## Ejemplo directorio trabajo de un proyecto
+
+
+```{r ej0, message=FALSE, warning=FALSE, echo=T}
+#NULL (default) / TRUE (open) / FALSE (closed) 
+path<-
+list.files("./", full.names = TRUE, recursive = TRUE)
+
+library(data.tree)
+library(plyr)
+
+a <- lapply(strsplit(path, "/"), function(z) as.data.frame(t(z)))
+a <- rbind.fill(a)
+mytree <- data.tree::as.Node(data.frame(pathString = path))
+```
+
+```{r}
+mytree
+```
+
+::: {.notes}
+`r invisible("#_#_#_#_#_#_#_#_#_#_#_#_#_#_#_#_#")`
+PROYECTOS: 
+- Este es un proyecto que tiene una serie de carpetas, que se conecta a Github (control de versiones), etc.
+- Esta es la estructura de datos que hay en su interior
+- Veamos qué contiene: hay un "american-medical-association-10th-edition.csl", para insertar un formato de referencias
+- Hay múltiples css para dar el estilo y diseño a la presentación y páginas en su interior
+- Estan los .RMDs y los .HTMLs
+- Carpetas: data, figs, output, style (ahí deberían ir los .css y todo lo que tiene relación con los temas, pero también van las fuentes de letra, etc.)
+- Tips: cuidado con dejar las carpetas en una subcarpeta OneDrive o coordinada con la nube porque eso podría generar problemas de sincronización
+:::
+
+
+## Ejercicio
+
+- Parta un proyecto nuevo (con las consideraciones dichas)
+- Tome las siguiente base de datos (copie y pegue en la consola):
+
+<details>
+```{r dput, message=FALSE, warning=FALSE, echo=T}
+#importante poner asis para que no eche a perder la salida
+data <- data.frame(
+  Folio = c(1297, 986, 971, 949, 940, 1740, 1875, 1567, 699, 887, 1641, 964, 1635, 2084, 2047, 1310, 803, 1977, 1685, 1776, 1129, 1697, 1682, 1228),
+  Curso = factor(c('5A', '5B', '5C', '5A', '5A', '5A', '5A', '5B', '5B', '5B', '5A', '5B', '5A', '5B', '5C', '5C', '5A', '5A', '5A', '5A', '5A', '5B', '5A', '5A')),
+  Sexo = factor(c('F', 'F', 'F', 'F', 'F', 'F', 'M', 'F', 'M', 'M', 'F', 'M', 'M', 'F', 'F', 'F', 'F', 'F', 'M', 'F', 'F', 'F', 'M', 'F')),
+  Peso = c(67.9, 43.9, 33.6, 33.2, 32.9, 26.2, 34.4, 36.6, 32.0, 52.2, 23.8, 40.6, 59.1, 33.4, 38.7, 41.8, 32.0, 35.8, 54.7, 67.3, 23.7, 44.2, 58.2, 43.7),
+  Talla = c(158.0, 143.0, 147.0, 136.5, 138.0, 132.5, 141.0, 137.0, 136.5, 142.0, 132.5, 139.0, 141.0, 140.5, 141.5, 143.5, 140.0, 144.5, 153.0, 154.0, 133.0, 137.5, 143.0, 149.5),
+  IMC = c(27.2, 21.5, 15.5, 17.8, 17.3, 14.9, 17.3, 19.5, 17.2, 25.9, 13.6, 21.0, 29.7, 16.9, 19.3, 20.3, 16.3, 17.1, 23.4, 28.4, 13.4, 23.4, 28.5, 19.6),
+  zimc = c(2.146, 1.286, -0.756, 0.318, 0.110, -1.109, 0.221, 0.909, 0.228, 2.066, -2.101, 1.348, 2.396, 0.109, 0.767, 1.151, -0.373, -0.006, 1.791, 2.241, -2.176, 1.646, 2.318, 0.943),
+  estado_zimc = c(3, 2, 0, 0, 0, 0, 0, 0, 0, 3, 1, 2, 3, 0, 0, 2, 0, 0, 3, 3, 1, 3, 3, 0),
+  Clasifnut = factor(c('Obeso', 'Sobrepeso', 'Normal', 'Normal', 'Normal', 'Normal', 'Normal', 'Normal', 'Normal', 'Obeso', 'Bajo peso', 'Sobrepeso', 'Obeso', 'Normal', 'Normal', 'Sobrepeso', 'Normal', 'Normal', 'Obeso', 'Obeso', 'Bajo peso', 'Obeso', 'Obeso', 'Normal'))
+)
+```
+
+
+```{r, results='asis'}
+dput(data)
+```
+</details>
+
+- Obtenga la media del `Peso`
+- Guarde los pasos seguidos para utilizar la base de datos y el cálculo de la media (sintaxis)
+- Guarde los resultados en un archivo
+- Cerciórese de que se mantengan en la misma carpeta
+- Cierre y reinicie su computador
+
+::: {.notes}
+`r invisible("#_#_#_#_#_#_#_#_#_#_#_#_#_#_#_#_#")`
+- Dos "comandos elementales" en R son las expresiones y las asignaciones. Las **expresiones** son comandos que R evalúa y cuyos resultados son impresos en la consola sin ser almacenados. Por ejemplo, el siguiente comando es una expresión porque solicita evaluar una suma cuyo resultado es arrojado a la consola:
+:::
+
+
+## Ejercicio: Hágalo usted
+- Su jefe le pide que vea los datos guardados en el proyecto de R adjunto en el enlace.
+
+- Abra el siguiente [enlace](https://github.com/AGSCL/Taller-UDP-2022/raw/main/_data/ejercicio2.zip) y ubique el entorno de trabajo en una carpeta manipulable.
+
+- Abra el **proyecto**, los datos, pero no el *script*
+
+- Vea las primeras 6 filas del objeto `base_datos` 
+
+- OPC. Vea las primeras 3 filas
+
+- ¿A qué llegó?
+
+```{r ej2, include=F}
+##script, comentario
+set.seed(112);base_datos<-data.frame(esto=rnorm(1:100))
+
+head(base_datos) 
+#1 -0.3142317
+#2  2.4033751
+#3 -0.7182640
+#4 -1.7606110
+#5 -1.1252812
+#6 -0.7195406
+
+head(base_datos,3)
+# -0.3142317
+#  2.4033751
+# -0.7182640
+
+head_base_datos<-capture.output(head(base_datos,3)) #capturamos lo que la consola nos entrega en un objeto
+```
+
+## Ejercicio: Hágalo usted (2)
+
+- Cree un nuevo proyecto en R
+
+- Genere la siguiente base de datos recurriendo a este código: `set.seed(6789); df2<- data.frame(numeros=round(rnorm(1:300)*100,0))`
+
+- Utilizando `tail(df2)` obtenga las últimas 6 observaciones
+
+- Súmelas
+
+- ¿Llegó al siguiente número: `r set.seed(6789); df2<- data.frame(numeros=round(rnorm(1:300)*100,0));sum(tail(df2))`?
+
+- OPC1 = obtenga la media de todos los números (use recursos en línea)
+
+- OPC2 (+ avanzada)= obtenga el resultado usando comas como separador de decimales ("outdec" en internet)
+
+- OPC3 = Obtenga la desviación estándar, separando los decimales con comas
+
+- Guarde los datos y el proyecto
+
+- Reinicie el computador. Vuelva a abrirlos
+
+```{r hagalo_usted, include=F}
+set.seed(6789); df2<- data.frame(numeros=round(rnorm(1:300)*100,0))
+
+#Utilizando tail(df2) obtenga las últimas 6 observaciones. Súmelas
+sum(tail(df2))
+
+#OPC1 = obtenga la media de todos los números (use recursos en línea)
+tail_df2<-tail(df2)
+
+mean(tail_df2$numeros)
+
+#OPC2 (+ avanzada)= obtenga el resultado usando comas como separador de decimales (“outdec” en internet)
+options(OutDec= ",")
+mean(tail_df2$numeros)
+
+#OPC3 = Obtenga la desviación estandar, separando los decimales con comas
+options(OutDec= ",")
+sd(tail_df2$numeros)
+```
+
+
+::: {.notes}
+
+**Ejercicio: Hágalo con su compañere**
+- En la carpeta `_data`, encontrará 2 ejercicios con nombre: **1a** y **1b**.
+- Ejecute el .RMD, genere con él un proyecto y 
+- Guarde la .Rdata con nombre 1a o 1b según corresponda (**NADA MÁS**)
+- Compártalo con un compañere
+- En aquel proyecto que le compartieron, sólo abra el .RData, despliegue el 
+- resultado alojado en el objeto **"plot"**
+:::
+
+# Parte 2
+
+
+## Funciones
+
+::: {style="text-align:right; color:brown;font-size:50%"}
+"To understand computations in R, two slogans are helpful:  
+Everything that exists is an object.  
+Everything that happens is a function call."  
+— John Chambers
+:::
+::: {style="font-size:80%"}
+- Una función define relaciones entre distintos objetos
+
+- Permite automatizar tareas
+
+```{r Fig-Ej20, fig.align="center", message=FALSE, warning=FALSE, cache=T, echo =F, out.width = "20%"}
+#knitr::include_graphics("G:/Mi unidad/Alvacast/Curso/Ejercicio20.png")
+knitr::include_graphics("_figs/Ejercicio20.png")
+```
+
+- Pueden contener otras funciones ("anidadas"/"nested")
+
+- Algunas tan complejas que requieren muchos argumentos, referencias, condiciones, etc.
+
+- Compuesta de nombre, argumento (a veces pre-definido) y cuerpo
+
+- Resultados pueden venir con advertencias (para considerar) o errores (para la ejecución). Nunca ignorar. Buscar en internet.
+:::
+
+## Funciones(2)
+
+Ejemplo: "head"
+
+- ¿Cuántas filas entrega por defecto?
+
+- Esa especificación es un argumento por defecto
+
+- El cuerpo, no lo vemos
+
+```{r head2, echo=T, size = 'tiny'}
+print.function(head)
+getAnywhere(head)[2]
+```
+
+## Paquetes Estadísticos
+
+- Una de las características que hace la diferencia entre otros programas. 
+
+- Un paquete estadístico contiene distintas funciones (comandos). 
+
+- Son extensiones de R: Contienen código, datos y documentación **estandarizada**.
+
+- Los paquetes en general se alojan en repositorios (CRAN, MRAN, GitHub, and BioConductor).
+
+- Las librerías son un directorio local que contiene los paquetes instalados
+
+- En general las librerías tienen archivos de documentación similares a formato Latex, con información de sus versiones, la fuente, etc.
+
+<div class="superbigimage">
+```{r Fig-Latex, fig.align="center", message=FALSE, warning=FALSE, cache=T, echo =F, out.width = "400px"}
+knitr::include_graphics("_figs/ejemplo_latex.PNG")
+```
+</div>
+
+
+## Repositorio CRAN
+
+- Abra Rstudio y presione `Alt + T + G` (WIN) o `	Cmd+, [comma] (Chrome, Desktop), Option+Cmd+, [comma] (Safari, FireFox)` (MAC)
+
+```{r Fig-Repositorio, fig.align="center", message=FALSE, warning=FALSE, cache=T, echo =F, out.width = "400px"}
+knitr::include_graphics("_figs/Repositorios.png")
+
+```
+
+- Veo desde donde consigo los datos, desde que servidor de R
+
+- Esta es una de las direcciones del CRAN (Comprehensive R Archive Network) correspondiente a Chile. 
+
+- Es recomendable definir por defecto un CRAN cercano. 
+
+::: {style="text-align:center;"}
+`options(repos=structure(c(CRAN="https://cran.dcc.uchile.cl/")))`
+:::
+
+
+## Instalación de Paquetes Estadísticos
+
+- Abra Rstudio, cree un proyecto de nombre "Curso 2", 
+- Abra un Script, escriba en él y ejecútelo (Run) 
+
+
+```{r crear-mean_curso, echo=T, size = 'tiny'}
+set.seed(4321) #Creamos una semilla para la generación de datos, 
+#de manera que los podamos reproducir
+datos<- rnorm(200, 4, .5) #Generamos 200 números aleatorizados, con un promedio 4 y una desviación estándar de 0,5
+#siguiendo distribución normal.
+promedio_curso <- function(x) {sum(x)/length(x)} #creamos una función que suma 
+#datos y los divide por su largo
+print(promedio_curso(datos))
+print(sum(datos)) #la suma de los datos
+print(length(datos)) #el largo de los datos
+.libPaths() # ver ubicación de la librería
+```
+
+- Algo que hacíamos en 2 ejecuciones, lo hicimos en una
+
+
+## Instalación de Paquetes Estadísticos(2)
+
+::: {style="font-size:70%;"}
+- Ingrese en la consola o en un Script, la instalación del paquete "dplyr",  `install.packages("dplyr")`
+- Habiendo hecho esto, usted está instalando el paquete, pero no lo ha activado ni lo ha abierto
+- Para activarlo momentáneamente (`library(dplyr)`).
+  - "require", sino "library" (https://stackoverflow.com/q/5595512/9975513)
+- Otros argumentos de la función install.packages:
+  - Ubicación de la librería, Repositorio (CRAN, MRAN, Bioconductor,local, etc.), instalar paquetes dependientes, etc.
+  - "?" o utilizando la función  `help()`
+  - Contradicciones entre sí (ej: plyr y dplyr) --> desactivar o "despegar" un paquete (`detach(package:[NOMBRE_PAQUETE])`)
+:::
+```{r Fig-install, fig.align="center", message=FALSE, warning=FALSE, cache=T, echo =F, out.width = "150x"}
+knitr::include_graphics("_figs/install_package.png")
+```
+
+<details>
+```{r tipos_paquete, echo=T,  eval=F}
+#OPC 1- una lista de paquetes estadísticos. Por cada fila, verá si existe el paquete.
+#Si no, lo instala sin preguntar desde un repositorio CRAN
+if(!require(paquete1)){install.packages("paquete1")}
+if(!require(paquete2)){install.packages("paquete2")}
+if(!require(paquete3)){install.packages("paquete3")}
+if(!require(paquete4)){install.packages("paquete4")}
+#:#:#:#:#:#:#:#:#:#:#:#:#:#:#:#:#:#:#:#:#:#:#:#:#:#:#:#:#:#:#:#:#:#:#:#:#:#:#:#:
+#OPC. 2- Vemos que una lista de paquetes estadísticos se encuentren instalados; 
+#si no lo están, aparece un mensaje
+for (n in c("paquete1", "paquete2", "paquete3", "paquete4", "paquete..."))
+{
+  if(!require(n,character.only=TRUE))
+  {
+   stop(paste0("El paquete '",n,"' no está instalado: por favor instálelo e inténtelo de nuevo!\n"));
+   # install.packages(n) # Si prefiere que lo instale automátiamente.
+  }
+  library(n,character.only=TRUE)
+}
+```
+</details>
+::: {style="font-size:70%;"}
+- Puede ver otros tipos de instaladores como `renv::install()`, `pacman::p_load(, install=T)` o `pak::pkg_install()`.
+
+- Una buena prácticas es utilizar `source("___requirements.txt")` para cargar las librerías que son comunes a cada etapa de un proyecto (ej., todas las clases).
+:::
+
+::: {.notes}
+- `require` es que entrega un valor binario si el paquete se cargó o no (VERDADERO/FALSO)
+- La amenaza es que si uno corre líneas de código, se obvia el error
+- Esto puede llevar a resultados erróneos (ej: aplicando funciones de otros paquetes con mismo nombre)
+:::
+
+## Ejemplo para partir con un script
+
+<details>
+````markdown
+#Para cambiar el repositorio
+options(repos=structure(c(CRAN="https://cran.dcc.uchile.cl/"))) 
+
+# Limpiar entorno
+rm(list = ls()) # limpiar completamente el entorno global environment
+gc() # limpiar la memoria virtual utilizada por R
+rm() # limpiar un objeto específico
+
+#si no tiene pacman, lo instala
+if(!require(pacman)){install.packages("pacman")}
+
+##### Instalar paquetes requeridos (OPCION PRINCIPAL)
+
+if(!require(tidyverse)){install.packages("tidyverse")}
+if(!require(psych)){install.packages("psych")}
+if(!require(Hmisc)){install.packages("Hmisc")}
+
+##### Cargar paquetes (OTRA ALTERNATIVA)
+try(pacman::p_load(tidyverse,   # Probablemente el paquete conjunto de paquetes más últil que usarán en R
+               foreign,         # Paquete import datos
+               Hmisc,           # Paquete con funciones variadas
+               psych,           # Paquete con algunas funciones comúnmente utilizadas (https://personality-project.org/r/psych/intro.pdf)
+               install = F))    # solo cargar, no instalar
+
+````
+</details>
+
+## Gracias
+
+<div style="width: 100%; height: 100vh; display: flex; align-items: center; justify-content: center;">
+<div style="text-align: center;">
+  <span style="font-weight: bold; color: #FF0000;">r</span>
+  <span style="font-weight: bold; color: #FFFFFF; text-shadow: -1px -1px 0 #000000, 1px -1px 0 #000000, -1px 1px 0 #000000, 1px 1px 0 #000000;">e</span>
+  <span style="font-weight: bold; color: #008000;">s</span>
+  <span style="font-weight: bold; color: #000000;">i</span>
+  <span style="font-weight: bold; color: #FF0000;">g</span>
+  <span style="font-weight: bold; color: #FFFFFF; text-shadow: -1px -1px 0 #000000, 1px -1px 0 #000000, -1px 1px 0 #000000, 1px 1px 0 #000000;">n</span>
+  <span style="font-weight: bold; color: #008000;">,</span>
+  <span>&nbsp;</span>
+  <span style="font-weight: bold; color: #000000;">r</span>
+  <span style="font-weight: bold; color: #FF0000;">e</span>
+  <span style="font-weight: bold; color: #FFFFFF; text-shadow: -1px -1px 0 #000000, 1px -1px 0 #000000, -1px 1px 0 #000000, 1px 1px 0 #000000;">f</span>
+  <span style="font-weight: bold; color: #008000;">u</span>
+  <span style="font-weight: bold; color: #000000;">s</span>
+  <span style="font-weight: bold; color: #FF0000;">e</span>
+  <span style="font-weight: bold; color: #FFFFFF; text-shadow: -1px -1px 0 #000000, 1px -1px 0 #000000, -1px 1px 0 #000000, 1px 1px 0 #000000;">,</span>
+  <span>&nbsp;</span>
+  <span style="font-weight: bold; color: #008000;">r</span>
+  <span style="font-weight: bold; color: #000000;">e</span>
+  <span style="font-weight: bold; color: #FF0000;">d</span>
+  <span style="font-weight: bold; color: #FFFFFF; text-shadow: -1px -1px 0 #000000, 1px -1px 0 #000000, -1px 1px 0 #000000, 1px 1px 0 #000000;">i</span>
+  <span style="font-weight: bold; color: #008000;">r</span>
+  <span style="font-weight: bold; color: #000000;">e</span>
+  <span style="font-weight: bold; color: #FF0000;">c</span>
+  <span style="font-weight: bold; color: #FFFFFF; text-shadow: -1px -1px 0 #000000, 1px -1px 0 #000000, -1px 1px 0 #000000, 1px 1px 0 #000000;">t</span>
+  <span style="font-weight: bold; color: #008000;">!</span>
+  <span style="font-weight: bold; color: #000000;">!</span>
+</div>
+</div>
+
+::: {.notes}
+“Renuncia a tu complicidad, rechaza la violencia estructural, y redirige tu energía hacia la justicia.”
+
+:::
+
+
+## Información de la sesión
+
+<div style="font-size: 50%;">
+```{r session_info, echo=T, paged.print=TRUE}
+#vemos desde donde se producen las librerías
+Sys.getenv("R_LIBS_USER")
+#ponemos información de la sesión: Sistema operativo, paquetes, idisioncracias, etc.
+sessionInfo()
+```
+</div>
+
+
+## Fuentes {.nonincremental}
+
+<div style="font-size: 40%;">
+
+- Boccardo, Giorgio & Ruiz, Felipe. (2018). Uso de RStudio para Estadística Univariada en Ciencias Sociales. Manual de apoyo docente para la asignatura Estadística Descriptiva (1a. Edición). 10.13140/RG.2.2.32783.48803. https://github.com/feliperuizbruzzone/Uso-de-R-para-Estadistica-Social/blob/master/Boccardo%20%26%20Ruiz%20(2018).%20Uso%20de%20RStudio%20para%20Estad%C3%ADstica%20Univariada%20en%20Ciencias%20Sociales%20%5B19%20%20julio%5D.pdf
+
+- Cano, E. & Moguerza, J. (2015). “R desde el principio. Curso ceRo de R”. Ediciones del Orto, Madrid. ISBN 84-7923-526-8. http://emilio.lcano.com/pub/cero/R-desde-el-principio-curso-cero-V1.02.pdf
+
+-	Ozgur, C., Kleckner, M., & Li, Y. (2015). Selection of Statistical Software for Solving Big Data Problems. SAGE Open, 5(2), 215824401558437. doi:10.1177/2158244015584379
+
+-	Leiden University (2023, April 12). “Goodbye SPSS, hallo R: ‘Now we can help students who like statistics to excel’”. Disponible en: https://www.universiteitleiden.nl/en/news/2023/04/goodbye-spss-hallo-r-now-we-can-help-students-who-like-statistics-to-excel
+
+-	Elosua, P. (2009). ¿Existe vida más allá del SPSS? Descubre R. Psicothema, 21(4),652-655. ISSN: 0214-9915. Disponible en: http://www.psicothema.com/pdf/3686.pdf
+
+- R Development Core Team (2000). Introducción a R. Notas sobre R: Un entorno de programación para Análisis de Datos y Gráficos. Versión 1.0.1
+https://cran.r-project.org/doc/contrib/R-intro-1.1.0-espanol.1.pdf
+
+- Bryan, J. (2017, Diciembre 12). Project-oriented workflow. https://www.tidyverse.org/blog/2017/12/workflow-vs-script/
+
+- RStudio Support (2022, Octubre 16). Using RStudio Projects. https://support.rstudio.com/hc/en-us/articles/200526207-Using-Projects
+
+- Stackoverflow. How do I ask a good question?. https://stackoverflow.com/help/how-to-ask
+
+- Smit, R. (2023, April). Goodbye SPSS, hallo R: ‘Now we can help students who like statistics to excel’. Leiden University. Retrieved from https://www.universiteitleiden.nl/en/news/2023/04/goodbye-spss-hallo-r-now-we-can-help-students-who-like-statistics-to-excel.
+</div>
